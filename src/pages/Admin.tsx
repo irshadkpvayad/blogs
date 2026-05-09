@@ -496,17 +496,26 @@ const SubcategoriesManager = () => {
 
 const RequestsManager = () => {
   const [requests, setRequests] = useState<any[]>([]);
+  const [usersMap, setUsersMap] = useState<Record<string, any>>({});
+  const [viewingRequest, setViewingRequest] = useState<any>(null);
 
   useEffect(() => {
-    const fetchRequests = async () => {
+    const fetchData = async () => {
       try {
+        const usersSn = await getDocs(collection(db, 'users'));
+        const uMap: Record<string, any> = {};
+        usersSn.docs.forEach(d => {
+            uMap[d.id] = d.data();
+        });
+        setUsersMap(uMap);
+
         const res = await getDocs(query(collection(db, 'requests'), orderBy('createdAt', 'desc')));
         setRequests(res.docs.map(d=>({id: d.id, ...d.data()})));
       } catch(e) {
         console.error(e);
       }
     };
-    fetchRequests();
+    fetchData();
   }, []);
 
   const handleAction = async (id: string, status: 'approved' | 'rejected') => {
@@ -532,6 +541,9 @@ const RequestsManager = () => {
         }
       }
       setRequests(reqs => reqs.map(r => r.id === id ? { ...r, status } : r));
+      if (viewingRequest?.id === id) {
+          setViewingRequest({ ...viewingRequest, status });
+      }
     } catch (e) {
       console.error(e);
     }
@@ -539,27 +551,88 @@ const RequestsManager = () => {
 
   return (
     <div className="space-y-4">
-      {requests.map(r => (
-        <div key={r.id} className="p-4 bg-white border border-slate-200 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex gap-3">
-             <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 font-bold text-xs uppercase">
-                 {r.status === 'pending' ? 'REV' : r.status.slice(0,3)}
-             </div>
-             <div className="overflow-hidden">
-                <p className="text-sm font-bold text-slate-900 truncate">{r.title}</p>
-                <p className="text-[10px] text-slate-500">By user: {r.userId} • <span className={`${r.status === 'pending' ? 'text-amber-600' : r.status === 'approved' ? 'text-emerald-600' : 'text-rose-600'} font-bold uppercase`}>{r.status}</span></p>
-             </div>
+      {requests.map(r => {
+        const reqUser = usersMap[r.userId];
+        return (
+          <div key={r.id} className="p-4 bg-white border border-slate-200 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="flex gap-3">
+               <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden">
+                   {reqUser?.photoURL ? (
+                       <img src={reqUser.photoURL} alt={reqUser.name || 'User'} className="w-full h-full object-cover" />
+                   ) : (
+                       <span className="text-xs font-bold text-slate-500 uppercase">{reqUser?.email?.slice(0,2) || 'US'}</span>
+                   )}
+               </div>
+               <div className="overflow-hidden">
+                  <p className="text-sm font-bold text-slate-900 truncate">{r.title}</p>
+                  <p className="text-[11px] text-slate-500">
+                      {reqUser?.email || 'Unknown User'} • <span className={`${r.status === 'pending' ? 'text-amber-600' : r.status === 'approved' ? 'text-emerald-600' : 'text-rose-600'} font-bold uppercase`}>{r.status}</span>
+                  </p>
+               </div>
+            </div>
+            <div className="flex gap-2 items-center">
+               <Button size="sm" variant="outline" onClick={() => setViewingRequest(r)}>View</Button>
+               {r.status === 'pending' && (
+                 <>
+                   <Button size="sm" onClick={() => handleAction(r.id, 'approved')}>Approve</Button>
+                   <Button size="sm" variant="outline" onClick={() => handleAction(r.id, 'rejected')} className="text-rose-600 border-rose-200 hover:bg-rose-50">Reject</Button>
+                 </>
+               )}
+            </div>
           </div>
-          <div className="flex gap-2 items-center">
-             {r.status === 'pending' && (
-               <>
-                 <Button size="sm" onClick={() => handleAction(r.id, 'approved')}>Approve</Button>
-                 <Button size="sm" variant="outline" onClick={() => handleAction(r.id, 'rejected')}>Reject</Button>
-               </>
-             )}
-          </div>
-        </div>
-      ))}
+        );
+      })}
+
+      {/* View Modal */}
+      {viewingRequest && (
+         <div className="fixed inset-0 z-50 bg-black/60 flex justify-center items-center p-4">
+             <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 sm:p-8 relative">
+                 <button onClick={() => setViewingRequest(null)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-800">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                 </button>
+                 
+                 <div className="mb-6 flex items-center gap-4 border-b border-slate-100 pb-6">
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 shrink-0">
+                       {usersMap[viewingRequest.userId]?.photoURL && (
+                           <img src={usersMap[viewingRequest.userId].photoURL} alt="Author" className="w-full h-full object-cover" />
+                       )}
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-black text-slate-900">{viewingRequest.title}</h2>
+                        <p className="text-sm text-slate-500">Requested by: <span className="font-bold">{usersMap[viewingRequest.userId]?.email || 'Unknown'}</span></p>
+                    </div>
+                 </div>
+
+                 {viewingRequest.thumbnail && (
+                     <div className="w-full aspect-[21/9] rounded-2xl overflow-hidden mb-6 bg-slate-100">
+                         <img src={viewingRequest.thumbnail} alt="Thumbnail" className="w-full h-full object-cover" />
+                     </div>
+                 )}
+
+                 <div className="mb-6">
+                     <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Description</h3>
+                     <p className="text-slate-700 text-sm">{viewingRequest.description}</p>
+                 </div>
+
+                 <div className="mb-8">
+                     <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Content Draft</h3>
+                     <div className="prose prose-slate max-w-none text-sm border border-slate-200 rounded-2xl p-4 bg-slate-50" dangerouslySetInnerHTML={{__html: viewingRequest.content}}></div>
+                 </div>
+
+                 {viewingRequest.status === 'pending' && (
+                     <div className="flex gap-4 pt-4 border-t border-slate-100">
+                         <Button onClick={() => { handleAction(viewingRequest.id, 'approved'); }}>Approve Post</Button>
+                         <Button variant="outline" onClick={() => { handleAction(viewingRequest.id, 'rejected'); }} className="text-rose-600 border-rose-200 hover:bg-rose-50">Reject Post</Button>
+                     </div>
+                 )}
+                 {viewingRequest.status !== 'pending' && (
+                     <div className="pt-4 border-t border-slate-100 text-sm font-bold text-slate-500 uppercase">
+                         Status: <span className={`${viewingRequest.status === 'approved' ? 'text-emerald-600' : 'text-rose-600'}`}>{viewingRequest.status}</span>
+                     </div>
+                 )}
+             </div>
+         </div>
+      )}
     </div>
   );
 };
