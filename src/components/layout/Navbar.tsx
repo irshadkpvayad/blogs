@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { auth } from '../../lib/firebase';
 import { signOut } from 'firebase/auth';
@@ -9,13 +9,9 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleLogin = () => {
-    navigate('/auth');
-  };
-
-  const handleLogout = async () => {
-    await signOut(auth);
-  };
+  const handleLogin = () => navigate('/auth');
+  const handleLogout = async () => await signOut(auth);
+  const isAdmin = userData?.role === 'admin';
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -29,18 +25,20 @@ export const Navbar = () => {
     <>
       <nav className="absolute top-0 w-full z-50 pt-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          
-          <Link to="/" className="flex items-center gap-2 text-orange-400 font-bold text-2xl tracking-tight z-50">
+
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 text-orange-400 font-bold text-2xl tracking-tight z-50 shrink-0">
             <div className="w-8 h-8 rounded-full bg-orange-400 flex items-center justify-center">
-               <div className="w-3 h-3 bg-[#001f3f] rounded-sm transform rotate-45"></div>
+              <div className="w-3 h-3 bg-[#001f3f] rounded-sm transform rotate-45"></div>
             </div>
             <span>Digitro</span>
           </Link>
-          
+
+          {/* Desktop Center Nav */}
           <div className="hidden lg:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
             {navLinks.map((link, i) => (
-              <a 
-                key={i} 
+              <a
+                key={i}
                 href={link.path}
                 className="font-medium text-white hover:text-orange-400 transition-colors flex items-center gap-1.5 text-[15px]"
               >
@@ -54,71 +52,151 @@ export const Navbar = () => {
             ))}
           </div>
 
-          <div className="flex items-center gap-6 ml-auto">
-            <button className="text-white hover:text-orange-400 hidden sm:block">
-               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-               </svg>
-            </button>
-            
+          {/* Desktop Right Actions */}
+          <div className="flex items-center gap-3 ml-auto">
+
             {user ? (
-              <div className="flex items-center gap-4 hidden sm:flex">
-                <Link to="/dashboard" className="px-5 py-2 rounded-full border border-white/20 text-white hover:bg-white/10 transition-colors text-sm font-medium">
+              /* ── Logged-in (desktop) ── */
+              <div className="hidden sm:flex items-center gap-3">
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold transition-colors shadow-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Admin Panel
+                  </Link>
+                )}
+                <Link
+                  to="/dashboard"
+                  className="px-4 py-2 rounded-full border border-white/20 text-white hover:bg-white/10 transition-colors text-sm font-medium"
+                >
                   Dashboard
                 </Link>
-                <div className="relative group cursor-pointer" onClick={handleLogout} title="Click to logout">
-                  <img src={userData?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`} className="w-9 h-9 rounded-full bg-slate-800 object-cover border border-white/20" alt="Profile" />
+                <div className="cursor-pointer" onClick={handleLogout} title="Click to log out">
+                  <img
+                    src={userData?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`}
+                    className="w-9 h-9 rounded-full bg-slate-800 object-cover border-2 border-white/20 hover:border-orange-400 transition-colors"
+                    alt="Profile"
+                  />
                 </div>
               </div>
             ) : (
-              <div className="hidden sm:flex items-center">
-                 <button onClick={handleLogin} className="px-6 py-2 rounded-full border border-white/20 text-white font-medium text-[14px] hover:bg-white/10 transition-all backdrop-blur-sm">
-                    Contact us
-                 </button>
+              /* ── Logged-out (desktop) ── */
+              <div className="hidden sm:flex items-center gap-3">
+                <button
+                  onClick={handleLogin}
+                  className="px-4 py-2 text-white font-medium text-[14px] hover:text-orange-400 transition-colors"
+                >
+                  Log in
+                </button>
+                <button
+                  onClick={handleLogin}
+                  className="px-5 py-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-[14px] transition-colors shadow-sm"
+                >
+                  Sign up
+                </button>
               </div>
             )}
-            
-            <button 
-               className="lg:hidden p-2 text-white"
-               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+
+            {/* Hamburger (mobile only) */}
+            <button
+              className="lg:hidden p-2 text-white"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-               </svg>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+              </svg>
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Mobile Menu */}
+      {/* ── Mobile Full-Screen Menu ── */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 top-0 bg-[#001f3f] z-40 px-4 pt-24 pb-6 flex flex-col h-screen overflow-y-auto">
-          <div className="flex flex-col gap-4 mb-8">
-             {navLinks.map((link, i) => (
-                <a key={i} href={link.path} onClick={() => setMobileMenuOpen(false)} className="font-semibold text-white text-xl py-3 border-b border-white/10">
-                  {link.name}
-                </a>
-             ))}
+        <div className="lg:hidden fixed inset-0 top-0 bg-[#001f3f] z-40 px-6 pt-24 pb-8 flex flex-col h-screen overflow-y-auto">
+
+          {/* Nav links */}
+          <div className="flex flex-col gap-1 mb-8">
+            {navLinks.map((link, i) => (
+              <a
+                key={i}
+                href={link.path}
+                onClick={() => setMobileMenuOpen(false)}
+                className="font-semibold text-white text-xl py-3 border-b border-white/10"
+              >
+                {link.name}
+              </a>
+            ))}
           </div>
-          
-          <div className="mt-auto flex flex-col gap-4">
-             {user ? (
-                <>
-                  <div className="flex items-center gap-4 py-4 border-b border-white/10 mb-2">
-                     <img src={userData?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`} className="w-14 h-14 rounded-full" alt="Profile" />
-                     <div>
-                        <p className="font-bold text-white text-lg">{userData?.name || 'User'}</p>
-                        <p className="text-sm text-gray-400">{userData?.email}</p>
-                     </div>
+
+          {/* Auth section at bottom */}
+          <div className="mt-auto flex flex-col gap-3">
+            {user ? (
+              <>
+                {/* User info card */}
+                <div className="flex items-center gap-4 py-4 border-b border-white/10 mb-1">
+                  <img
+                    src={userData?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`}
+                    className="w-14 h-14 rounded-full border-2 border-orange-400"
+                    alt="Profile"
+                  />
+                  <div>
+                    <p className="font-bold text-white text-lg">{userData?.name || 'User'}</p>
+                    <p className="text-sm text-white/60">{userData?.email}</p>
+                    <span className="text-xs text-orange-400 font-bold uppercase tracking-wider">
+                      {userData?.role || 'member'}
+                    </span>
                   </div>
-                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="font-semibold text-white py-3 text-center bg-white/5 rounded-xl border border-white/10">Dashboard</Link>
-                  <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="font-semibold text-rose-400 py-3 text-center bg-rose-500/10 rounded-xl">Log out</button>
-                </>
-             ) : (
-                <button onClick={() => { handleLogin(); setMobileMenuOpen(false); }} className="w-full text-lg font-semibold text-white py-3 rounded-xl border border-white/20">
-                  Contact us
+                </div>
+
+                {/* Admin Panel button — visible only to admins */}
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 font-bold text-white py-3 bg-orange-500 hover:bg-orange-600 rounded-xl transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Admin Panel
+                  </Link>
+                )}
+
+                <Link
+                  to="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="font-semibold text-white py-3 text-center bg-white/5 rounded-xl border border-white/10"
+                >
+                  Dashboard
+                </Link>
+
+                <button
+                  onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                  className="font-semibold text-rose-400 py-3 bg-rose-500/10 rounded-xl border border-rose-500/20"
+                >
+                  Log out
                 </button>
-             )}
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => { handleLogin(); setMobileMenuOpen(false); }}
+                  className="w-full text-lg font-semibold text-white py-3 rounded-xl bg-white/5 border border-white/10"
+                >
+                  Log in
+                </button>
+                <button
+                  onClick={() => { handleLogin(); setMobileMenuOpen(false); }}
+                  className="w-full text-lg font-bold text-white bg-orange-500 hover:bg-orange-600 py-3 rounded-xl transition-colors"
+                >
+                  Sign up
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

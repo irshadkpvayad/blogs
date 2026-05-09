@@ -145,9 +145,9 @@ const RequestPostForm = () => {
       setCategoryId('');
       setSubCategoryId('');
       setThumbnailFile(null);
-    } catch (err) {
-      toast.error('Failed to request post.');
-      handleFirestoreError(err, OperationType.CREATE, 'requests');
+    } catch (err: any) {
+      console.error('Submit request error:', err?.message || err);
+      toast.error('Failed to submit request. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
