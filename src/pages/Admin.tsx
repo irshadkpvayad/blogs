@@ -705,11 +705,11 @@ const PostsManager = () => {
       let thumbnailUrl = '';
       if (thumbnailFile) {
          try {
-           const { uploadImage } = await import('../lib/storage');
-           thumbnailUrl = await uploadImage(thumbnailFile, 'posts');
+           const { compressImageToBase64 } = await import('../lib/utils');
+           thumbnailUrl = await compressImageToBase64(thumbnailFile, 800, 0.7);
          } catch (uploadErr) {
-           console.error("Storage upload failed, this may be due to missing storage rules:", uploadErr);
-           alert("Thumbnail upload failed (check Firebase Storage rules in console). Post will be created without it.");
+           console.error("Image compression failed:", uploadErr);
+           alert("Thumbnail compression failed. Post will be created without it.");
          }
       }
 

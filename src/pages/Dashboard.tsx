@@ -119,11 +119,11 @@ const RequestPostForm = () => {
     try {
       if (thumbnailFile) {
         try {
-          const { uploadImage } = await import('../lib/storage');
-          thumbnailUrl = await uploadImage(thumbnailFile, 'requests');
+          const { compressImageToBase64 } = await import('../lib/utils');
+          thumbnailUrl = await compressImageToBase64(thumbnailFile, 800, 0.7);
         } catch (uploadErr) {
-           console.error("Storage upload failed:", uploadErr);
-           alert("Thumbnail upload failed (check rules). Continuing without it.");
+           console.error("Image processing failed:", uploadErr);
+           toast.error("Thumbnail compression failed. Continuing without it.");
         }
       }
 
