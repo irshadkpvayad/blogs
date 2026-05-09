@@ -29,9 +29,9 @@ export const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 text-orange-400 font-bold text-2xl tracking-tight z-50 shrink-0">
             <div className="w-8 h-8 rounded-full bg-orange-400 flex items-center justify-center">
-              <div className="w-3 h-3 bg-[#001f3f] rounded-sm transform rotate-45"></div>
+              <span className="text-[#001f3f] text-xs font-black tracking-tighter">Q</span>
             </div>
-            <span>Digitro</span>
+            <span className="uppercase tracking-widest text-lg">QALAM THIRASH</span>
           </Link>
 
           {/* Desktop Center Nav */}

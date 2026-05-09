@@ -68,10 +68,10 @@ export const AuthPage = () => {
       <div className="w-full max-w-md bg-white p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.07)] border border-slate-100 text-center space-y-8 relative z-10">
         <div className="space-y-4">
           <div className="w-16 h-16 bg-orange-400 rounded-2xl mx-auto flex items-center justify-center shadow-sm">
-            <div className="w-6 h-6 bg-[#001f3f] rounded-md transform rotate-45"></div>
+             <span className="text-[#001f3f] text-2xl font-black tracking-tighter">Q</span>
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Welcome to Digitro</h1>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-2">Welcome to QALAM THIRASH</h1>
             <p className="text-slate-500 text-[15px]">Sign in to manage your account and read exclusive content.</p>
           </div>
         </div>

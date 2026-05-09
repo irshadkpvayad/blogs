@@ -15,6 +15,7 @@ import { Home } from './pages/Home';
 import { AdminPanel } from './pages/Admin';
 import { PostView } from './pages/PostView';
 import { Dashboard } from './pages/Dashboard';
+import { DynamicPage } from './pages/DynamicPage';
 import { Toaster } from 'sonner';
 
 import { Search } from './pages/Search';
@@ -71,6 +72,7 @@ export default function App() {
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/search" element={<Search />} />
             <Route path="/post/:id" element={<PostView />} />
+            <Route path="/p/:slug" element={<DynamicPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<AdminPanel />} />
           </Routes>

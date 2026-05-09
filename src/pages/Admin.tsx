@@ -37,6 +37,9 @@ export const AdminPanel = () => {
             ) },
             { id: 'users', label: 'Users', icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            ) },
+            { id: 'pages', label: 'Pages', icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             ) }
           ].map((tab) => (
             <button
@@ -69,6 +72,7 @@ export const AdminPanel = () => {
         {activeTab === 'categories' && <CategoriesManager />}
         {activeTab === 'subcategories' && <SubcategoriesManager />}
         {activeTab === 'users' && <UsersManager />}
+        {activeTab === 'pages' && <PagesManager />}
         {activeTab === 'dashboard' && <AdminAnalytics />}
       </main>
     </div>
@@ -147,6 +151,175 @@ const AdminAnalytics = () => {
       </div>
    );
 }
+
+const PagesManager = () => {
+  const [pages, setPages] = useState<any[]>([]);
+  const [isCreating, setIsCreating] = useState(false);
+  const [editingPage, setEditingPage] = useState<any>(null);
+  
+  const [title, setTitle] = useState('');
+  const [slug, setSlug] = useState('');
+  const [content, setContent] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const fetchPages = async () => {
+    try {
+      const q = query(collection(db, 'pages'), orderBy('createdAt', 'desc'));
+      const sn = await getDocs(q);
+      setPages(sn.docs.map(d => ({id: d.id, ...d.data()})));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (!isCreating && !editingPage) fetchPages();
+  }, [isCreating, editingPage]);
+
+  // Auto-generate slug from title if not explicitly set
+  useEffect(() => {
+    if (!editingPage && title && !slug) {
+       setSlug(title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''));
+    }
+  }, [title]);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      if (!title || !content || !slug) throw new Error("Title, slug, and content required");
+
+      if (editingPage) {
+         await updateDoc(doc(db, 'pages', editingPage.id), {
+           title,
+           slug,
+           content,
+           updatedAt: Date.now()
+         });
+      } else {
+         await addDoc(collection(db, 'pages'), {
+            title,
+            slug,
+            content,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          });
+      }
+      setIsCreating(false);
+      setEditingPage(null);
+      setTitle('');
+      setSlug('');
+      setContent('');
+    } catch(err) {
+      console.error(err);
+      alert("Failed to save page.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (page: any) => {
+     setTitle(page.title);
+     setSlug(page.slug);
+     setContent(page.content);
+     setEditingPage(page);
+  };
+  
+  const handleDelete = async (id: string) => {
+     if (!confirm("Are you sure you want to delete this page?")) return;
+     try {
+         const { deleteDoc } = await import('firebase/firestore');
+         await deleteDoc(doc(db, 'pages', id));
+         setPages(pages.filter(p => p.id !== id));
+     } catch (e) {
+         console.error(e);
+     }
+  };
+
+  if (isCreating || editingPage) {
+    return (
+      <form onSubmit={handleCreate} className="space-y-6 max-w-4xl bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+        <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+          <h2 className="font-black text-slate-800 text-xl">{editingPage ? 'Edit Page' : 'New Page'}</h2>
+          <Button type="button" variant="outline" size="sm" onClick={() => { setIsCreating(false); setEditingPage(null); }}>Cancel</Button>
+        </div>
+        
+        <div className="space-y-4">
+           <div className="space-y-1.5">
+              <label className="text-sm font-bold text-slate-700">Page Title</label>
+              <input 
+                 type="text" 
+                 required
+                 value={title} 
+                 onChange={e=>setTitle(e.target.value)}
+                 className="w-full rounded-xl border border-slate-200 p-3 outline-none focus:border-indigo-500 font-medium"
+              />
+           </div>
+           
+           <div className="space-y-1.5">
+              <label className="text-sm font-bold text-slate-700">URL Slug (e.g. about-us)</label>
+              <input 
+                 type="text" 
+                 required
+                 value={slug} 
+                 onChange={e=>setSlug(e.target.value)}
+                 className="w-full rounded-xl border border-slate-200 p-3 outline-none focus:border-indigo-500 font-medium text-slate-500 bg-slate-50"
+              />
+           </div>
+        </div>
+
+        <div className="mt-4">
+            <label className="text-sm font-bold text-slate-700 block mb-1.5">Page Content</label>
+            <RichEditor content={content} onChange={setContent} />
+        </div>
+        
+        <div className="pt-4">
+             <Button type="submit" isLoading={loading}>{editingPage ? 'Save Changes' : 'Publish Page'}</Button>
+        </div>
+      </form>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex justify-between items-center">
+        <h2 className="font-black text-slate-800 text-xl">All Static Pages</h2>
+        <Button onClick={() => {
+           setTitle(''); setSlug(''); setContent(''); setIsCreating(true);
+        }}>Create Page</Button>
+      </div>
+      
+      <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+         <table className="w-full text-left">
+            <thead className="bg-slate-50 border-b border-slate-100">
+               <tr>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-widest leading-none">Title</th>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-widest leading-none">URL Path</th>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-widest leading-none text-right">Actions</th>
+               </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+               {pages.length === 0 && (
+                  <tr><td colSpan={3} className="p-8 text-center text-slate-500 font-medium">No pages created yet.</td></tr>
+               )}
+               {pages.map(p => (
+                  <tr key={p.id} className="hover:bg-slate-50 transition-colors group">
+                     <td className="p-4 font-bold text-slate-900">{p.title}</td>
+                     <td className="p-4 text-sm text-indigo-600 font-medium">/p/{p.slug}</td>
+                     <td className="p-4 flex gap-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button size="sm" variant="outline" onClick={() => handleEdit(p)}>Edit</Button>
+                        <button onClick={() => handleDelete(p.id)} className="text-slate-400 hover:text-rose-600 font-bold text-sm px-3 py-1 bg-slate-100 hover:bg-rose-50 rounded-lg transition-colors">
+                           Delete
+                        </button>
+                     </td>
+                  </tr>
+               ))}
+            </tbody>
+         </table>
+      </div>
+    </div>
+  );
+};
 
 const UsersManager = () => {
   const [users, setUsers] = useState<any[]>([]);
