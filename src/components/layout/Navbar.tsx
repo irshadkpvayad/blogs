@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { auth } from '../../lib/firebase';
@@ -8,6 +8,15 @@ export const Navbar = () => {
   const { user, userData } = useAuthStore();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogin = () => navigate('/auth');
   const handleLogout = async () => await signOut(auth);
@@ -23,15 +32,19 @@ export const Navbar = () => {
 
   return (
     <>
-      <nav className="absolute top-0 w-full z-50 pt-6 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <nav className={`z-50 transition-all duration-300 ${
+        scrolled 
+          ? 'fixed top-4 left-4 right-4 max-w-7xl mx-auto bg-white/90 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-2xl border border-slate-100 py-3 px-4 sm:px-6 lg:px-8'
+          : 'absolute top-0 w-full pt-6 px-4 sm:px-6 lg:px-8'
+      }`}>
+        <div className={`mx-auto flex items-center justify-between ${scrolled ? 'w-full' : 'max-w-7xl'}`}>
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 text-orange-400 font-bold text-2xl tracking-tight z-50 shrink-0">
+          <Link to="/" className="flex items-center gap-2 font-bold text-2xl tracking-tight z-50 shrink-0">
             <div className="w-8 h-8 rounded-full bg-orange-400 flex items-center justify-center">
               <span className="text-[#001f3f] text-xs font-black tracking-tighter">Q</span>
             </div>
-            <span className="uppercase tracking-widest text-lg">QALAM THIRASH</span>
+            <span className={`uppercase tracking-widest text-lg transition-colors ${scrolled ? 'text-slate-900' : 'text-white'}`}>QALAM THIRASH</span>
           </Link>
 
           {/* Desktop Center Nav */}
@@ -40,11 +53,13 @@ export const Navbar = () => {
               <a
                 key={i}
                 href={link.path}
-                className="font-medium text-white hover:text-orange-400 transition-colors flex items-center gap-1.5 text-[15px]"
+                className={`font-bold transition-colors flex items-center gap-1.5 text-[15px] ${
+                  scrolled ? 'text-slate-600 hover:text-orange-500' : 'text-white/90 hover:text-orange-400'
+                }`}
               >
                 {link.name}
                 {link.hasDropdown && (
-                  <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-4 h-4 ${scrolled ? 'text-slate-400' : 'text-white/70'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
                 )}
@@ -71,7 +86,11 @@ export const Navbar = () => {
                 )}
                 <Link
                   to="/dashboard"
-                  className="px-4 py-2 rounded-full border border-white/20 text-white hover:bg-white/10 transition-colors text-sm font-medium"
+                  className={`px-4 py-2 rounded-full border text-sm font-bold transition-colors ${
+                    scrolled 
+                      ? 'border-slate-200 text-slate-700 hover:bg-slate-50' 
+                      : 'border-white/20 text-white hover:bg-white/10'
+                  }`}
                 >
                   Dashboard
                 </Link>
@@ -88,7 +107,9 @@ export const Navbar = () => {
               <div className="hidden sm:flex items-center gap-3">
                 <button
                   onClick={handleLogin}
-                  className="px-4 py-2 text-white font-medium text-[14px] hover:text-orange-400 transition-colors"
+                  className={`px-4 py-2 font-bold text-[14px] transition-colors ${
+                    scrolled ? 'text-slate-700 hover:text-orange-500' : 'text-white hover:text-orange-400'
+                  }`}
                 >
                   Log in
                 </button>
@@ -103,7 +124,7 @@ export const Navbar = () => {
 
             {/* Hamburger (mobile only) */}
             <button
-              className="lg:hidden p-2 text-white"
+              className={`lg:hidden p-2 ${scrolled ? 'text-slate-800' : 'text-white'}`}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

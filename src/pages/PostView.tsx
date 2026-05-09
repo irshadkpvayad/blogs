@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, increment, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { format } from 'date-fns';
 import { useAuthStore } from '../store/useAuthStore';
@@ -10,20 +10,35 @@ export const PostView = () => {
   const [post, setPost] = useState<any>(null);
   const [author, setAuthor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Sidebar data
+  const [categories, setCategories] = useState<any[]>([]);
+  const [recentPosts, setRecentPosts] = useState<any[]>([]);
+  const [popularPosts, setPopularPosts] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
         if (!id) return;
-        const postDoc = await getDoc(doc(db, 'posts', id));
+        const postRef = doc(db, 'posts', id);
+        const postDoc = await getDoc(postRef);
+        
         if (postDoc.exists()) {
           const data = postDoc.data();
           setPost({ id: postDoc.id, ...data });
-          document.title = data.title + " - BlockPlatform";
+          document.title = data.title + " - QALAM THIRASH";
           
           if (data.authorId) {
             const authorDoc = await getDoc(doc(db, 'users', data.authorId));
             if (authorDoc.exists()) setAuthor(authorDoc.data());
+          }
+
+          // View tracking logic
+          const sessionKey = `viewed_${id}`;
+          if (!sessionStorage.getItem(sessionKey)) {
+             await updateDoc(postRef, { views: increment(1) });
+             sessionStorage.setItem(sessionKey, 'true');
+             // Update local state so UI reflects it immediately if we were to show views here
           }
         }
       } catch (e) {
@@ -32,49 +47,144 @@ export const PostView = () => {
         setLoading(false);
       }
     };
+
+    const fetchSidebarData = async () => {
+       try {
+          // Fetch categories
+          const catSn = await getDocs(query(collection(db, 'categories'), orderBy('createdAt', 'desc')));
+          setCategories(catSn.docs.map(d => ({id: d.id, ...d.data()})));
+
+          // Fetch recent posts
+          const recentSn = await getDocs(query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(5)));
+          setRecentPosts(recentSn.docs.map(d => ({id: d.id, ...d.data()})).filter(p => p.id !== id));
+
+          // Fetch popular posts
+          const popSn = await getDocs(query(collection(db, 'posts'), orderBy('views', 'desc'), limit(5)));
+          setPopularPosts(popSn.docs.map(d => ({id: d.id, ...d.data()})).filter(p => p.id !== id));
+       } catch (e) {
+          console.error("Error fetching sidebar data:", e);
+       }
+    };
+
     fetchPost();
+    fetchSidebarData();
   }, [id]);
 
-  if (loading) return <div className="max-w-3xl mx-auto p-8 animate-pulse text-center">Loading...</div>;
-  if (!post) return <div className="max-w-3xl mx-auto p-8 text-center text-gray-500">Post not found.</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#f2f8fc]"><div className="w-12 h-12 border-4 border-slate-200 border-t-[#0b63e5] rounded-full animate-spin"></div></div>;
+  if (!post) return <div className="min-h-screen flex items-center justify-center bg-[#f2f8fc]"><div className="text-center text-slate-500 font-bold text-xl">Post not found.</div></div>;
 
   return (
-    <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex flex-col w-full">
-      <header className="mb-12">
-        <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 mb-6 leading-tight">
-          {post.title}
-        </h1>
-        {post.subtitle && (
-          <p className="text-xl md:text-2xl text-slate-500 font-medium mb-10 max-w-3xl leading-snug">
-            {post.subtitle}
-          </p>
-        )}
+    <div className="flex-1 w-full bg-[#f2f8fc] pb-24">
+      {/* Dark Header Banner for Navbar visibility */}
+      <div className="bg-[#001f3f] w-full h-32 md:h-48"></div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 md:-mt-24 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
         
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-200 border-2 border-indigo-100 shrink-0 shadow-sm">
-            {author?.photoURL && <img src={author.photoURL} alt={author.name} className="w-full h-full object-cover" />}
-          </div>
-          <div>
-            <p className="font-bold text-slate-900">{author?.name || 'Unknown Author'}</p>
-            <p className="text-sm font-medium text-slate-500">{format(post.createdAt || Date.now(), 'MMM d, yyyy')} • {post.readTime || 5} min read</p>
-          </div>
-        </div>
-      </header>
+        {/* Main Content Area */}
+        <article className="lg:col-span-8 xl:col-span-8 bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-10 lg:p-12">
+          <header className="mb-10">
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight text-slate-900 mb-6 leading-tight">
+              {post.title}
+            </h1>
+            {post.subtitle && (
+              <p className="text-lg md:text-xl text-slate-500 font-medium mb-8 max-w-3xl leading-snug">
+                {post.subtitle}
+              </p>
+            )}
+            
+            <div className="flex items-center gap-4 py-4 border-y border-slate-100">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-200 border border-slate-200 shrink-0 shadow-sm">
+                {author?.photoURL && <img src={author.photoURL} alt={author.name} className="w-full h-full object-cover" />}
+              </div>
+              <div>
+                <p className="font-bold text-slate-900 text-sm md:text-base">{author?.name || 'Unknown Author'}</p>
+                <p className="text-xs md:text-sm font-medium text-slate-500">{format(post.createdAt || Date.now(), 'MMM d, yyyy')} • {post.readTime || 5} min read • <span className="text-indigo-600 font-bold">{post.views || 0} views</span></p>
+              </div>
+            </div>
+          </header>
 
-      {post.thumbnail && (
-        <figure className="mb-16 rounded-3xl overflow-hidden shadow-xl border border-slate-100 aspect-[21/9]">
-          <img src={post.thumbnail} alt={post.title} className="w-full h-full object-cover" />
-        </figure>
-      )}
+          {post.thumbnail && (
+            <figure className="mb-12 rounded-2xl overflow-hidden bg-slate-100 aspect-[21/9]">
+              <img src={post.thumbnail} alt={post.title} className="w-full h-full object-cover" />
+            </figure>
+          )}
 
-      <div 
-        className="prose prose-lg sm:prose-xl max-w-none prose-img:rounded-3xl prose-img:shadow-md prose-img:border prose-img:border-slate-100 prose-a:text-indigo-600 prose-a:font-semibold hover:prose-a:text-indigo-700 prose-headings:font-black prose-headings:tracking-tight prose-headings:text-slate-900 prose-p:text-slate-700 mb-20"
-        dangerouslySetInnerHTML={{ __html: post.content }} 
-      />
+          <div 
+            className="prose prose-slate md:prose-lg max-w-none prose-img:rounded-2xl prose-a:text-indigo-600 prose-a:font-semibold hover:prose-a:text-indigo-700 prose-headings:font-black prose-headings:tracking-tight prose-headings:text-slate-900 mb-16"
+            dangerouslySetInnerHTML={{ __html: post.content }} 
+          />
 
-      <hr className="my-12 border-slate-200" />
-      <CommentsSection postId={id as string} />
-    </article>
+          <hr className="my-10 border-slate-100" />
+          <CommentsSection postId={id as string} />
+        </article>
+
+        {/* Sidebar */}
+        <aside className="lg:col-span-4 xl:col-span-4 space-y-8">
+            {/* Categories Widget */}
+            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+                <h3 className="font-black text-slate-900 text-xl mb-6 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                    Categories
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                    {categories.length > 0 ? categories.map(cat => (
+                        <span key={cat.id} className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-full text-sm font-bold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-100 transition-colors cursor-pointer">
+                            {cat.name}
+                        </span>
+                    )) : (
+                        <p className="text-sm text-slate-400 font-medium">No categories found.</p>
+                    )}
+                </div>
+            </div>
+
+            {/* Most Viewed Posts Widget */}
+            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+                <h3 className="font-black text-slate-900 text-xl mb-6 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    Most Viewed
+                </h3>
+                <div className="space-y-6">
+                    {popularPosts.length > 0 ? popularPosts.map(p => (
+                        <Link to={`/post/${p.id}`} key={p.id} className="group flex items-start gap-4">
+                            {p.thumbnail && (
+                                <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-slate-100 border border-slate-100">
+                                    <img src={p.thumbnail} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                </div>
+                            )}
+                            <div className="flex-1">
+                                <h4 className="font-bold text-slate-800 text-sm md:text-base leading-tight group-hover:text-indigo-600 transition-colors line-clamp-2 mb-1">{p.title}</h4>
+                                <p className="text-xs font-bold text-slate-400">{p.views || 0} views</p>
+                            </div>
+                        </Link>
+                    )) : (
+                        <p className="text-sm text-slate-400 font-medium">No popular posts yet.</p>
+                    )}
+                </div>
+            </div>
+
+            {/* Recent Posts Widget */}
+            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+                <h3 className="font-black text-slate-900 text-xl mb-6 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Recent Posts
+                </h3>
+                <div className="space-y-6">
+                    {recentPosts.length > 0 ? recentPosts.map(p => (
+                        <Link to={`/post/${p.id}`} key={p.id} className="group flex items-start gap-4">
+                            <div className="flex-1">
+                                <h4 className="font-bold text-slate-800 text-sm md:text-base leading-tight group-hover:text-indigo-600 transition-colors line-clamp-2 mb-1">{p.title}</h4>
+                                <p className="text-xs font-bold text-slate-400">{format(p.createdAt || Date.now(), 'MMM d, yyyy')}</p>
+                            </div>
+                        </Link>
+                    )) : (
+                        <p className="text-sm text-slate-400 font-medium">No recent posts.</p>
+                    )}
+                </div>
+            </div>
+        </aside>
+
+      </div>
+    </div>
   );
 };
 
@@ -117,11 +227,11 @@ const CommentsSection = ({ postId }: { postId: string }) => {
     <div className="space-y-10">
       <h3 className="text-2xl font-black text-slate-900 tracking-tight">Discussion</h3>
       {user ? (
-        <form onSubmit={handleSubmit} className="space-y-4 max-w-3xl">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <textarea 
             value={newComment} onChange={e=>setNewComment(e.target.value)} 
             placeholder="Share your thoughts..." 
-            className="w-full rounded-2xl border border-slate-200 p-5 bg-white shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-slate-900 min-h-[120px] resize-y"
+            className="w-full rounded-2xl border border-slate-200 p-5 bg-slate-50 shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-slate-900 min-h-[120px] resize-y"
           />
           <div className="flex justify-end">
             <button type="submit" className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none" disabled={!newComment.trim()}>Post Comment</button>
@@ -134,20 +244,20 @@ const CommentsSection = ({ postId }: { postId: string }) => {
         </div>
       )}
 
-      <div className="space-y-6 pt-8 border-t border-slate-100 max-w-3xl">
+      <div className="space-y-6 pt-8 border-t border-slate-100">
         {comments.map(c => (
-          <div key={c.id} className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm flex gap-5">
-             <div className="w-12 h-12 rounded-full bg-slate-100 shrink-0 border border-slate-200"></div>
+          <div key={c.id} className="p-6 rounded-3xl bg-slate-50 border border-slate-200 flex gap-5">
+             <div className="w-10 h-10 rounded-full bg-slate-200 shrink-0 border border-slate-300"></div>
              <div className="flex-1 space-y-2">
                 <div className="flex justify-between items-start">
-                   <p className="text-xs text-slate-400 font-medium">{new Date(c.createdAt).toLocaleString()}</p>
+                   <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{new Date(c.createdAt).toLocaleString()}</p>
                 </div>
-                <p className="text-slate-700 leading-relaxed">{c.content}</p>
+                <p className="text-slate-700 leading-relaxed text-sm md:text-base font-medium">{c.content}</p>
              </div>
           </div>
         ))}
         {comments.length === 0 && (
-           <p className="text-slate-500 text-center py-10">No comments yet. Be the first to start the discussion!</p>
+           <p className="text-slate-500 text-center py-10 font-medium">No comments yet. Be the first to start the discussion!</p>
         )}
       </div>
     </div>

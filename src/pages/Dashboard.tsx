@@ -25,6 +25,7 @@ export const Dashboard = () => {
         <nav className="flex flex-col gap-2">
           {[
             { id: 'profile', label: 'My Profile' },
+            { id: 'posts', label: 'My Published Posts' },
             { id: 'requests', label: 'My Requests' },
             { id: 'request-post', label: 'Request Post' },
             { id: 'saved', label: 'Saved Posts' },
@@ -67,6 +68,7 @@ export const Dashboard = () => {
         )}
 
         {activeTab === 'request-post' && <RequestPostForm />}
+        {activeTab === 'posts' && <MyPosts />}
         {activeTab === 'requests' && <MyRequests />}
         {activeTab === 'saved' && <p className="text-slate-500 text-center py-20 font-medium">Saved posts feature coming soon.</p>}
       </main>
@@ -228,9 +230,52 @@ const RequestPostForm = () => {
           placeholder="Write your draft here..."
         />
       </div>
-      
       <Button type="submit" isLoading={loading} className="w-full sm:w-auto">Submit Request</Button>
     </form>
+  );
+};
+
+const MyPosts = () => {
+  const { user } = useAuthStore();
+  const [posts, setPosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const { orderBy } = await import('firebase/firestore');
+        const q = query(collection(db, 'posts'), where('authorId', '==', user!.uid), orderBy('createdAt', 'desc'));
+        const res = await getDocs(q);
+        setPosts(res.docs.map(d=>({id:d.id, ...d.data()})));
+      } catch(e) {
+        console.error(e);
+      }
+    };
+    fetchPosts();
+  }, [user]);
+
+  return (
+    <div>
+      <h2 className="text-2xl font-black text-slate-900 mb-6 tracking-tight">My Published Posts</h2>
+      {posts.length === 0 ? <p className="text-slate-500 py-10 font-medium">No published posts found.</p> : (
+        <div className="space-y-4">
+          {posts.map(p => (
+            <div key={p.id} className="p-5 border border-slate-200 rounded-2xl flex justify-between items-center bg-white shadow-sm transition-all hover:shadow-md">
+              <div>
+                <h4 className="font-bold text-slate-900 line-clamp-1">{p.title}</h4>
+                <div className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                   <span>{new Date(p.createdAt || 0).toLocaleString()}</span>
+                   <span>•</span>
+                   <span className="flex items-center gap-1 font-bold text-indigo-600">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                      {p.views || 0}
+                   </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 
