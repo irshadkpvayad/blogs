@@ -8,6 +8,7 @@ export const Navbar = () => {
   const { user, userData } = useAuthStore();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -94,12 +95,69 @@ export const Navbar = () => {
                 >
                   Dashboard
                 </Link>
-                <div className="cursor-pointer" onClick={handleLogout} title="Click to log out">
-                  <img
-                    src={userData?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`}
-                    className="w-9 h-9 rounded-full bg-slate-800 object-cover border-2 border-white/20 hover:border-orange-400 transition-colors"
-                    alt="Profile"
-                  />
+                {/* Profile Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                    className="flex items-center gap-2 focus:outline-none"
+                  >
+                    <img
+                      src={userData?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`}
+                      className="w-9 h-9 rounded-full object-cover border-2 border-white/30 hover:border-orange-400 transition-colors shadow-sm"
+                      alt="Profile"
+                    />
+                  </button>
+
+                  {profileMenuOpen && (
+                    <>
+                      {/* Backdrop to close on outside click */}
+                      <div className="fixed inset-0 z-40" onClick={() => setProfileMenuOpen(false)} />
+                      {/* Dropdown card */}
+                      <div className="absolute right-0 top-12 z-50 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+                        {/* User info */}
+                        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-slate-50">
+                          <img
+                            src={userData?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`}
+                            className="w-11 h-11 rounded-full border border-slate-200 object-cover shrink-0"
+                            alt="Profile"
+                          />
+                          <div className="overflow-hidden">
+                            <p className="font-bold text-slate-900 text-sm truncate">{userData?.name || 'User'}</p>
+                            <p className="text-xs text-slate-500 truncate">{userData?.email}</p>
+                          </div>
+                        </div>
+                        {/* Menu items */}
+                        <div className="py-2">
+                          <Link
+                            to="/dashboard"
+                            onClick={() => setProfileMenuOpen(false)}
+                            className="flex items-center gap-3 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                          >
+                            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7h18M3 12h18M3 17h18" /></svg>
+                            Dashboard
+                          </Link>
+                          {isAdmin && (
+                            <Link
+                              to="/admin"
+                              onClick={() => setProfileMenuOpen(false)}
+                              className="flex items-center gap-3 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                            >
+                              <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                              Admin Panel
+                            </Link>
+                          )}
+                          <hr className="my-1 border-slate-100" />
+                          <button
+                            onClick={() => { handleLogout(); setProfileMenuOpen(false); }}
+                            className="w-full flex items-center gap-3 px-5 py-2.5 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                            Log out
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             ) : (

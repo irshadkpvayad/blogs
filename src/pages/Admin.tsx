@@ -128,8 +128,8 @@ const AdminAnalytics = () => {
                 status: 'published',
                 createdAt: Date.now() - (i * 86400000), // spread over days
                 updatedAt: Date.now(),
-                views: Math.floor(Math.random() * 1000),
-                likes: Math.floor(Math.random() * 100)
+                views: 0,
+                likes: 0
              });
          }
          alert("Seeding complete!");
