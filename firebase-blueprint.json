@@ -1,0 +1,193 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile document.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "bio": { "type": "string" },
+        "joinedDate": { "type": "number", "description": "Timestamp" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "totalPosts": { "type": "number" },
+        "totalComments": { "type": "number" },
+        "rating": { "type": "number" },
+        "followersCount": { "type": "number" },
+        "followingCount": { "type": "number" },
+        "emailVerified": { "type": "boolean" }
+      },
+      "required": ["uid", "name", "email", "joinedDate", "role"]
+    },
+    "Post": {
+      "title": "Post",
+      "description": "A blog post.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "content": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "subcategoryId": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "authorId": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "published", "scheduled"] },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" },
+        "readTime": { "type": "number" },
+        "views": { "type": "number" },
+        "likes": { "type": "number" },
+        "featured": { "type": "boolean" }
+      },
+      "required": ["title", "content", "authorId", "status", "createdAt"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "A blog category.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "image": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["name", "slug", "createdAt"]
+    },
+    "Subcategory": {
+      "title": "Subcategory",
+      "description": "A blog subcategory.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "categoryId": { "type": "string" }
+      },
+      "required": ["name", "slug", "categoryId"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "A post comment.",
+      "type": "object",
+      "properties": {
+        "postId": { "type": "string" },
+        "userId": { "type": "string" },
+        "content": { "type": "string" },
+        "parentId": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "likes": { "type": "number" }
+      },
+      "required": ["postId", "userId", "content", "createdAt"]
+    },
+    "PostRequest": {
+      "title": "Post Request",
+      "description": "User requested blog post.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "content": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "subcategoryId": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "title", "content", "status", "createdAt"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User notification.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string" },
+        "fromUserId": { "type": "string" },
+        "postId": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "type", "read", "createdAt"]
+    },
+    "Follower": {
+      "title": "Follower",
+      "description": "Follow relationship.",
+      "type": "object",
+      "properties": {
+        "followerId": { "type": "string" },
+        "followingId": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["followerId", "followingId", "createdAt"]
+    },
+    "Bookmark": {
+      "title": "Bookmark",
+      "description": "User bookmark.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "postId": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "postId", "createdAt"]
+    },
+    "Rating": {
+      "title": "Rating",
+      "description": "Author rating.",
+      "type": "object",
+      "properties": {
+        "authorId": { "type": "string" },
+        "raterId": { "type": "string" },
+        "stars": { "type": "number" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["authorId", "raterId", "stars", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Users"
+    },
+    "/posts/{postId}": {
+      "schema": { "$ref": "#/entities/Post" },
+      "description": "Posts"
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Categories"
+    },
+    "/subcategories/{subcategoryId}": {
+      "schema": { "$ref": "#/entities/Subcategory" },
+      "description": "Subcategories"
+    },
+    "/comments/{commentId}": {
+      "schema": { "$ref": "#/entities/Comment" },
+      "description": "Comments"
+    },
+    "/requests/{requestId}": {
+      "schema": { "$ref": "#/entities/PostRequest" },
+      "description": "Post Requests"
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "Notifications"
+    },
+    "/followers/{followerId_followingId}": {
+      "schema": { "$ref": "#/entities/Follower" },
+      "description": "Follower Relations"
+    },
+    "/bookmarks/{bookmarkId}": {
+      "schema": { "$ref": "#/entities/Bookmark" },
+      "description": "Bookmarks"
+    },
+    "/ratings/{ratingId}": {
+      "schema": { "$ref": "#/entities/Rating" },
+      "description": "Ratings"
+    }
+  }
+}

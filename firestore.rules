@@ -1,0 +1,194 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Core Helpers ---
+    function isSignedIn() { return request.auth != null; }
+    function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    
+    // --- Admin Helper ---
+    // If user's email matches admin email, they are admin.
+    function isAdmin() { 
+      return isSignedIn() && 
+             (request.auth.token.email == 'geektyle8@gmail.com' || 
+              (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+
+    // --- Validation Helpers ---
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() > 0 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.email is string && data.email.size() > 0 &&
+             data.role in ['user', 'admin'] &&
+             data.joinedDate is number &&
+             data.keys().hasAll(['uid', 'name', 'email', 'role', 'joinedDate']);
+    }
+
+    function isValidPost(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.content is string && data.content.size() > 0 &&
+             data.authorId is string && data.authorId.size() > 0 &&
+             data.status in ['draft', 'published', 'scheduled'] &&
+             data.createdAt is number &&
+             data.keys().hasAll(['title', 'content', 'authorId', 'status', 'createdAt']);
+    }
+
+    function isValidCategory(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.slug is string && data.slug.size() > 0 && data.slug.size() <= 100 &&
+             data.createdAt is number &&
+             data.keys().hasAll(['name', 'slug', 'createdAt']);
+    }
+
+    function isValidSubcategory(data) {
+        return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+               data.slug is string && data.slug.size() > 0 && data.slug.size() <= 100 &&
+               data.createdAt is number &&
+               data.keys().hasAll(['name', 'slug', 'createdAt']);
+    }
+
+    function isValidComment(data) {
+        return data.postId is string && data.postId.size() > 0 &&
+               data.userId is string && data.userId.size() > 0 &&
+               data.content is string && data.content.size() > 0 && data.content.size() <= 2000 &&
+               data.createdAt is number &&
+               data.keys().hasAll(['postId', 'userId', 'content', 'createdAt']);
+    }
+
+    function isValidPostRequest(data) {
+        return data.userId is string && data.userId.size() > 0 &&
+               data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+               data.content is string && data.content.size() > 0 &&
+               data.status in ['pending', 'approved', 'rejected'] &&
+               data.createdAt is number &&
+               data.keys().hasAll(['userId', 'title', 'content', 'status', 'createdAt']);
+    }
+
+    function isValidNotification(data) {
+        return data.userId is string && data.userId.size() > 0 &&
+               data.type is string && data.type.size() > 0 && data.type.size() <= 50 &&
+               data.read is bool &&
+               data.createdAt is number &&
+               data.keys().hasAll(['userId', 'type', 'read', 'createdAt']);
+    }
+
+    function isValidFollower(data) {
+        return data.followerId is string && data.followerId.size() > 0 &&
+               data.followingId is string && data.followingId.size() > 0 &&
+               data.createdAt is number &&
+               data.keys().hasAll(['followerId', 'followingId', 'createdAt']);
+    }
+
+    function isValidBookmark(data) {
+        return data.userId is string && data.userId.size() > 0 &&
+               data.postId is string && data.postId.size() > 0 &&
+               data.createdAt is number &&
+               data.keys().hasAll(['userId', 'postId', 'createdAt']);
+    }
+
+    function isValidRating(data) {
+        return data.authorId is string && data.authorId.size() > 0 &&
+               data.raterId is string && data.raterId.size() > 0 &&
+               data.stars is number && data.stars >= 1 && data.stars <= 5 &&
+               data.createdAt is number &&
+               data.keys().hasAll(['authorId', 'raterId', 'stars', 'createdAt']);
+    }
+
+    // Users
+    match /users/{userId} {
+      allow get: if isValidId(userId);
+      allow list: if isAdmin(); // allow admins to list users
+      
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming()) && incoming().uid == userId && (incoming().role == 'user' || request.auth.token.email == 'geektyle8@gmail.com');
+      
+      allow update: if isSignedIn() && isValidId(userId) && request.auth.uid == userId && isValidUser(incoming()) && incoming().uid == existing().uid &&
+        (incoming().diff(existing()).affectedKeys().hasOnly(['name', 'photoURL', 'bio', 'totalPosts', 'totalComments', 'rating', 'followersCount', 'followingCount', 'emailVerified'])) || isAdmin();
+
+      allow delete: if isAdmin();
+    }
+
+    // Posts
+    match /posts/{postId} {
+        allow get: if isValidId(postId) && (existing().status == 'published' || isAdmin() || (isSignedIn() && existing().authorId == request.auth.uid));
+        // Client must use where clause for listing depending on status.  Rule enforces the condition.
+        allow list: if (resource.data.status == 'published') || isAdmin() || (isSignedIn() && resource.data.authorId == request.auth.uid);
+
+        allow create: if isAdmin() && isValidPost(incoming());
+        allow update: if isAdmin() && isValidId(postId) && isValidPost(incoming());
+        allow delete: if isAdmin() && isValidId(postId);
+    }
+
+    // Categories
+    match /categories/{categoryId} {
+        allow get: if isValidId(categoryId);
+        allow list: if true;
+        allow create, update, delete: if isAdmin();
+
+        match /subcategories/{subcategoryId} {
+            allow get: if isValidId(subcategoryId);
+            allow list: if true;
+            allow create, update, delete: if isAdmin();
+        }
+    }
+
+    // Comments
+    match /comments/{commentId} {
+        allow get: if isValidId(commentId);
+        allow list: if true;
+        allow create: if isSignedIn() && isValidComment(incoming()) && incoming().userId == request.auth.uid;
+        allow update: if isSignedIn() && isValidId(commentId) && isValidComment(incoming()) &&
+                      ((incoming().userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['content', 'likes'])) || isAdmin());
+        allow delete: if isAdmin() || (isSignedIn() && isValidId(commentId) && existing().userId == request.auth.uid);
+    }
+
+    // Requests
+    match /requests/{requestId} {
+        allow get: if isAdmin() || (isSignedIn() && isValidId(requestId) && existing().userId == request.auth.uid);
+        allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+        allow create: if isSignedIn() && isValidPostRequest(incoming()) && incoming().userId == request.auth.uid;
+        allow update: if isAdmin() && isValidId(requestId) && isValidPostRequest(incoming());
+        allow delete: if isAdmin() || (isSignedIn() && isValidId(requestId) && existing().userId == request.auth.uid && existing().status == 'pending');
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+        allow get: if isSignedIn() && isValidId(notificationId) && existing().userId == request.auth.uid;
+        allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+        allow create: if isSignedIn() && isValidNotification(incoming());
+        allow update: if isSignedIn() && isValidId(notificationId) && isValidNotification(incoming()) && existing().userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['read']);
+        allow delete: if isSignedIn() && isValidId(notificationId) && existing().userId == request.auth.uid;
+    }
+
+    // Followers
+    match /followers/{followerRelId} {
+        allow get: if true;
+        allow list: if true;
+        allow create: if isSignedIn() && isValidFollower(incoming()) && incoming().followerId == request.auth.uid;
+        allow delete: if isSignedIn() && isValidId(followerRelId) && existing().followerId == request.auth.uid;
+    }
+
+    // Bookmarks
+    match /bookmarks/{bookmarkId} {
+        allow get: if isSignedIn() && isValidId(bookmarkId) && existing().userId == request.auth.uid;
+        allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+        allow create: if isSignedIn() && isValidBookmark(incoming()) && incoming().userId == request.auth.uid;
+        allow delete: if isSignedIn() && isValidId(bookmarkId) && existing().userId == request.auth.uid;
+    }
+
+    // Ratings
+    match /ratings/{ratingId} {
+        allow get: if true;
+        allow list: if true;
+        allow create: if isSignedIn() && isValidRating(incoming()) && incoming().raterId == request.auth.uid;
+        allow update: if isSignedIn() && isValidId(ratingId) && isValidRating(incoming()) && existing().raterId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['stars']);
+    }
+  }
+}
