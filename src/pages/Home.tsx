@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import { useAuthStore } from '../store/useAuthStore';
 
 export const Home = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.title = "Blog Insights | Digitro";
@@ -62,9 +65,35 @@ export const Home = () => {
                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#001f3f]/80"></div>
             </div>
             
-            <div className="relative z-10 text-center pt-8">
+            <div className="relative z-10 text-center pt-8 px-4">
                <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">Blog Insights</h1>
-               <p className="text-white/80 text-lg font-medium">Explore Our Latest Articles and Industry Insights</p>
+               <p className="text-white/80 text-lg font-medium mb-8">Explore Our Latest Articles and Industry Insights</p>
+               {!user && (
+                 <div className="flex items-center justify-center gap-4">
+                   <button
+                     onClick={() => navigate('/auth')}
+                     className="px-7 py-2.5 rounded-full bg-white text-[#001f3f] font-bold text-[15px] hover:bg-slate-100 transition-colors shadow-sm"
+                   >
+                     Log in
+                   </button>
+                   <button
+                     onClick={() => navigate('/auth')}
+                     className="px-7 py-2.5 rounded-full bg-orange-500 text-white font-bold text-[15px] hover:bg-orange-600 transition-colors shadow-sm"
+                   >
+                     Sign up
+                   </button>
+                 </div>
+               )}
+               {user && (
+                 <div className="flex items-center justify-center gap-4">
+                   <Link
+                     to="/dashboard"
+                     className="px-7 py-2.5 rounded-full bg-white text-[#001f3f] font-bold text-[15px] hover:bg-slate-100 transition-colors shadow-sm"
+                   >
+                     My Dashboard
+                   </Link>
+                 </div>
+               )}
             </div>
          </div>
       </div>
