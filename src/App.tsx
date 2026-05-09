@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db, handleFirestoreError, OperationType } from './lib/firebase';
 import { useAuthStore } from './store/useAuthStore';
@@ -20,6 +20,14 @@ import { Toaster } from 'sonner';
 
 import { Search } from './pages/Search';
 import { AuthPage } from './pages/Auth';
+
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
 
 export default function App() {
   const { setUser, fetchUserData, setLoading } = useAuthStore();
@@ -63,6 +71,7 @@ export default function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="flex flex-col min-h-screen bg-[#f2f8fc] text-slate-900 font-sans overflow-x-hidden selection:bg-[#0b63e5] selection:text-white">
         <Toaster position="top-center" theme="light" />
         <Navbar />
