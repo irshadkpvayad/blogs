@@ -34,7 +34,7 @@ export const Navbar = () => {
     <>
       <nav className={`z-50 transition-all duration-300 ${
         scrolled 
-          ? 'fixed top-4 left-4 right-4 max-w-7xl mx-auto bg-white/90 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-2xl border border-slate-100 py-3 px-4 sm:px-6 lg:px-8'
+          ? 'fixed top-4 left-4 right-4 max-w-7xl mx-auto bg-white/95 backdrop-blur-md shadow-[0_10px_40px_rgb(0,0,0,0.15)] rounded-2xl border border-slate-100 py-3 px-4 sm:px-6 lg:px-8'
           : 'absolute top-0 w-full pt-6 px-4 sm:px-6 lg:px-8'
       }`}>
         <div className={`mx-auto flex items-center justify-between ${scrolled ? 'w-full' : 'max-w-7xl'}`}>
