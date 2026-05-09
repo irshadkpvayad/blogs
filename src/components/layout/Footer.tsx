@@ -2,21 +2,18 @@ import React from 'react';
 
 export const Footer = () => {
   return (
-    <footer className="bg-[#0a0a0a] text-white pt-20 pb-10 px-4 sm:px-6 lg:px-8 mt-auto w-full border-t border-white/5 relative z-10 overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-px bg-gradient-to-r from-transparent via-[#00f0ff] to-transparent opacity-30"></div>
-      
-      <div className="max-w-7xl mx-auto flex flex-col items-center relative z-10">
+    <footer className="bg-[#001f3f] text-white pt-20 pb-10 px-4 sm:px-6 lg:px-8 mt-auto w-full">
+      <div className="max-w-7xl mx-auto flex flex-col items-center">
         
-        <div className="text-center max-w-3xl mb-20">
-          <h2 className="text-4xl sm:text-5xl font-heading font-black mb-6 tracking-tight text-glow">Build the Future</h2>
-          <p className="text-gray-400 text-lg sm:text-xl mb-10 font-light">Join the network of creators shaping the next digital frontier.</p>
-          <div className="flex items-center justify-center gap-6">
-             <button className="px-8 py-3 bg-white/5 border border-white/10 text-white font-semibold rounded-full hover:bg-white/10 transition-colors backdrop-blur-md">
-                Initialize Comm
+        <div className="text-center max-w-3xl mb-16">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6 tracking-tight">Stay connected with Digitro</h2>
+          <p className="text-white/70 text-lg sm:text-xl mb-8 font-light">Join over 4,000+ companies getting our latest insights.</p>
+          <div className="flex items-center justify-center gap-4">
+             <button className="px-6 py-3 bg-white/10 text-white font-semibold rounded-full hover:bg-white/20 transition-colors">
+                Contact Sales
              </button>
-             <button className="relative group px-8 py-3 rounded-full bg-gradient-to-r from-[#00f0ff] to-[#b026ff] text-white font-semibold overflow-hidden shadow-[0_0_20px_rgba(176,38,255,0.3)] hover:shadow-[0_0_30px_rgba(0,240,255,0.5)] transition-all">
-                <span className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                <span className="relative z-10">Access Portal</span>
+             <button className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-full hover:bg-orange-600 transition-colors shadow-sm">
+                Subscribe
              </button>
           </div>
         </div>
@@ -24,13 +21,13 @@ export const Footer = () => {
         <div className="w-full grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 pb-12 border-b border-white/10">
            {FOOTER_LINKS.map(col => (
               <div key={col.title}>
-                 <h4 className="font-heading font-bold text-gray-200 mb-6 text-sm uppercase tracking-widest">{col.title}</h4>
+                 <h4 className="font-bold text-white mb-6 text-sm">{col.title}</h4>
                  <ul className="space-y-4">
                     {col.links.map(link => (
                        <li key={link.name}>
-                          <a href="#" className="text-gray-500 hover:text-[#00f0ff] transition-colors text-[15px] flex items-center gap-2 font-light">
+                          <a href="#" className="text-white/60 hover:text-white transition-colors text-[15px] flex items-center gap-2 font-medium">
                              {link.name}
-                             {link.isNew && <span className="bg-[#b026ff]/20 text-[#b026ff] border border-[#b026ff]/30 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">v2.0</span>}
+                             {link.isNew && <span className="bg-orange-500 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">New</span>}
                           </a>
                        </li>
                     ))}
@@ -39,16 +36,14 @@ export const Footer = () => {
            ))}
         </div>
         
-        <div className="w-full flex flex-col sm:flex-row items-center justify-between mt-8 text-gray-600 text-sm font-mono">
-           <div className="flex items-center gap-3 mb-4 sm:mb-0">
-             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00f0ff] to-[#b026ff] flex items-center justify-center shadow-lg shadow-[#b026ff]/20">
-               <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-white" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-               </svg>
+        <div className="w-full flex flex-col sm:flex-row items-center justify-between mt-8 text-white/50 text-sm">
+           <div className="flex items-center gap-2 mb-4 sm:mb-0">
+             <div className="w-6 h-6 rounded-full bg-orange-400 flex items-center justify-center">
+               <div className="w-2 h-2 bg-[#001f3f] rounded-sm transform rotate-45"></div>
              </div>
-             <span className="font-bold text-gray-300 tracking-wider">QALAMFLOW_SYS</span>
+             <span className="font-bold text-white tracking-wide">Digitro</span>
            </div>
-           <p>© 2077 QALAM NEXUS. END OF LINE.</p>
+           <p>© 2026 Digitro Inc. All rights reserved.</p>
         </div>
       </div>
     </footer>
@@ -57,63 +52,61 @@ export const Footer = () => {
 
 const FOOTER_LINKS = [
   {
-     title: 'Protocols',
+     title: 'Product',
      links: [
-        { name: 'Core System' },
-        { name: 'Modules' },
-        { name: 'Neural Net', isNew: true },
-        { name: 'API Docs' },
-        { name: 'Bandwidth' }
+        { name: 'Overview' },
+        { name: 'Features' },
+        { name: 'Solutions', isNew: true },
+        { name: 'Tutorials' },
+        { name: 'Pricing' }
      ]
   },
   {
-     title: 'Faction',
+     title: 'Company',
      links: [
-        { name: 'Origins' },
-        { name: 'Recruitment' },
-        { name: 'Transmissions' },
-        { name: 'Archives' },
-        { name: 'Terminal' }
+        { name: 'About us' },
+        { name: 'Careers' },
+        { name: 'Press' },
+        { name: 'News' },
+        { name: 'Contact' }
      ]
   },
   {
-     title: 'Data',
+     title: 'Resources',
      links: [
-        { name: 'Logs' },
-        { name: 'Frequency' },
-        { name: 'Holo-Events' },
-        { name: 'Support AI' },
-        { name: 'Nodes' }
+        { name: 'Blog' },
+        { name: 'Events' },
+        { name: 'Help centre' },
+        { name: 'Tutorials' },
+        { name: 'Support' }
      ]
   },
   {
-     title: 'Sectors',
+     title: 'Use cases',
      links: [
-        { name: 'Neon City' },
-        { name: 'Underworld' },
-        { name: 'High Orbit' },
-        { name: 'Cyber-Sec' },
-        { name: 'Synth-Com' }
+        { name: 'Startups' },
+        { name: 'Enterprise' },
+        { name: 'Government' },
+        { name: 'Ecommerce' }
      ]
   },
   {
-     title: 'Grid',
+     title: 'Social',
      links: [
-        { name: 'NetWatch' },
-        { name: 'X-Cor' },
-        { name: 'Void' },
-        { name: 'Git-Node' },
-        { name: 'Hex' }
+        { name: 'Twitter' },
+        { name: 'LinkedIn' },
+        { name: 'Facebook' },
+        { name: 'GitHub' },
+        { name: 'Dribbble' }
      ]
   },
   {
      title: 'Legal',
      links: [
-        { name: 'Directives' },
-        { name: 'Privacy Shield' },
-        { name: 'Trace Logs' },
-        { name: 'Override' },
-        { name: 'Ping' }
+        { name: 'Terms' },
+        { name: 'Privacy' },
+        { name: 'Cookies' },
+        { name: 'Licenses' }
      ]
   }
 ];

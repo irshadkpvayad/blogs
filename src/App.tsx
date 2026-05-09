@@ -62,13 +62,10 @@ export default function App() {
 
   return (
     <Router>
-      <div className="flex flex-col min-h-screen bg-[#030303] text-white font-sans overflow-x-hidden selection:bg-[#00f0ff] selection:text-black">
-        <Toaster position="top-center" theme="dark" />
+      <div className="flex flex-col min-h-screen bg-[#f2f8fc] text-slate-900 font-sans overflow-x-hidden selection:bg-[#0b63e5] selection:text-white">
+        <Toaster position="top-center" theme="light" />
         <Navbar />
         <main className="flex-1 flex flex-col w-full mx-auto relative">
-          {/* Global Ambient Glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-r from-[#00f0ff]/20 to-[#b026ff]/20 blur-[120px] pointer-events-none rounded-full" />
-          
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<AuthPage />} />
