@@ -35,13 +35,14 @@ const MOCK_POSTS = Array(7).fill(null).map((_, i) => ({
 
 export const Home = () => {
   const [posts, setPosts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuthStore();
 
   useEffect(() => {
     document.title = 'Qalam Thirash | Blog Platform';
-    const fetchPosts = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
         const q = query(collection(db, 'posts'), where('status', '==', 'published'), limit(21));
@@ -51,15 +52,26 @@ export const Home = () => {
           .sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0));
 
         setPosts(fetched.length >= 2 ? fetched : MOCK_POSTS);
+
+        const catSn = await getDocs(query(collection(db, 'categories'), limit(4)));
+        setCategories(catSn.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       } catch (err: any) {
-        console.error('Posts fetch error:', err?.message || err);
+        console.error('Fetch error:', err?.message || err);
         setPosts(MOCK_POSTS);
       } finally {
         setLoading(false);
       }
     };
-    fetchPosts();
+    fetchData();
   }, []);
+
+  const trendingPosts = [...posts].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 3);
+  const displayCategories = categories.length > 0 ? categories : [
+    { id: '1', name: 'Strategy', slug: 'strategy', desc: 'SEO friendly collection with UI/UX typography support.', posts: 18 },
+    { id: '2', name: 'Engineering', slug: 'engineering', desc: 'Deep dives into code, architecture, and deployment.', posts: 22 },
+    { id: '3', name: 'Design', slug: 'design', desc: 'Creative insights on UI/UX, graphics, and product.', posts: 10 },
+    { id: '4', name: 'Growth', slug: 'growth', desc: 'Tactics for scaling products and acquiring users.', posts: 11 }
+  ];
 
   return (
     <div className="w-full pb-20 relative z-10 font-sans pt-24">
@@ -224,14 +236,14 @@ export const Home = () => {
                      Trending
                   </h3>
                   <div className="space-y-8">
-                     {[1, 2, 3].map(num => (
-                        <div key={num} className="flex gap-5 group cursor-pointer">
-                           <div className="text-4xl font-black text-orange-400/30 group-hover:text-orange-400 transition-colors mt-1">{num}</div>
+                     {trendingPosts.map((post, i) => (
+                        <Link key={post.id} to={`/post/${post.id}`} className="flex gap-5 group cursor-pointer">
+                           <div className="text-4xl font-black text-orange-400/30 group-hover:text-orange-400 transition-colors mt-1">{i + 1}</div>
                            <div>
-                              <h4 className="font-bold text-slate-900 text-[16px] mb-2 leading-snug group-hover:text-blue-600 transition-colors">{MOCK_POSTS[num-1]?.title}</h4>
-                              <p className="text-[13px] text-slate-500 font-semibold">{MOCK_POSTS[num-1]?.views?.toLocaleString() || '18,245'} views</p>
+                              <h4 className="font-bold text-slate-900 text-[16px] mb-2 leading-snug group-hover:text-blue-600 transition-colors">{post.title}</h4>
+                              <p className="text-[13px] text-slate-500 font-semibold">{(post.views || 0).toLocaleString()} views</p>
                            </div>
-                        </div>
+                        </Link>
                      ))}
                   </div>
                </div>
@@ -264,17 +276,12 @@ export const Home = () => {
             Explore categories
          </h3>
          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { name: 'Strategy', posts: 18, desc: 'SEO friendly collection with UI/UX typography support.' },
-              { name: 'Engineering', posts: 22, desc: 'SEO friendly collection with UI/UX typography support.' },
-              { name: 'Design', posts: 10, desc: 'SEO friendly collection with UI/UX typography support.' },
-              { name: 'Growth', posts: 11, desc: 'SEO friendly collection with UI/UX typography support.' }
-            ].map(cat => (
-               <div key={cat.name} className="bg-white rounded-[2rem] p-8 shadow-[0_4px_20px_rgb(0,0,0,0.02)] border border-slate-100 hover:shadow-lg transition-all cursor-pointer group">
-                  <div className="text-[12px] font-bold text-orange-500 mb-6 uppercase tracking-wider">{cat.posts} posts</div>
+            {displayCategories.map(cat => (
+               <Link to={`/search?category=${cat.slug || cat.name.toLowerCase()}`} key={cat.id} className="bg-white rounded-[2rem] p-8 shadow-[0_4px_20px_rgb(0,0,0,0.02)] border border-slate-100 hover:shadow-lg transition-all cursor-pointer group">
+                  <div className="text-[12px] font-bold text-orange-500 mb-6 uppercase tracking-wider">{cat.posts !== undefined ? `${cat.posts} posts` : 'Explore'}</div>
                   <h4 className="text-2xl font-black text-slate-900 mb-4 group-hover:text-blue-600 transition-colors">{cat.name}</h4>
-                  <p className="text-[14px] text-slate-500 font-medium leading-relaxed">{cat.desc}</p>
-               </div>
+                  <p className="text-[14px] text-slate-500 font-medium leading-relaxed">{cat.desc || cat.description || 'Explore posts in this category.'}</p>
+               </Link>
             ))}
          </div>
       </div>

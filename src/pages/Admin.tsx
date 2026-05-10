@@ -38,9 +38,9 @@ export const AdminPanel = () => {
   if (userData?.role !== 'admin') return <Navigate to="/" />;
 
   return (
-    <div className="flex flex-col md:flex-row flex-1 overflow-hidden w-full max-w-7xl mx-auto h-[calc(100vh-4rem)] pt-20 md:pt-0 bg-[#f2f8fc]">
+    <div className="flex flex-col md:flex-row flex-1 overflow-hidden w-full max-w-7xl mx-auto min-h-screen pt-24 md:pt-28 pb-8 bg-[#f2f8fc]">
       {/* Mobile: Horizontal scrollable tab bar */}
-      <div className="md:hidden bg-[#f2f8fc] border-b border-slate-200 shrink-0 sticky top-0 z-10">
+      <div className="md:hidden bg-[#f2f8fc] border-b border-slate-200 shrink-0 sticky top-[72px] z-10 mx-4 rounded-t-2xl mt-4">
         <div className="flex overflow-x-auto scrollbar-hide gap-1 p-2">
           {adminTabs.map((tab) => (
             <button
@@ -60,9 +60,9 @@ export const AdminPanel = () => {
       </div>
 
       {/* Desktop: Sidebar */}
-      <aside className="hidden md:flex w-64 bg-white border-r border-slate-200 flex-col p-4 shrink-0 overflow-y-auto">
+      <aside className="hidden md:flex w-64 bg-white border border-slate-200 rounded-3xl flex-col p-4 shrink-0 overflow-y-auto mr-6 shadow-sm">
         <div className="space-y-1 mb-8">
-           <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Management</p>
+           <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 mt-2">Management</p>
           {adminTabs.map((tab) => (
             <button
               key={tab.id}
@@ -81,8 +81,8 @@ export const AdminPanel = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col p-4 md:p-8 overflow-y-auto gap-4 md:gap-8">
-        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+      <main className="flex-1 flex flex-col px-4 md:px-0 overflow-y-auto gap-4 md:gap-8">
+        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mt-4 md:mt-0">
             <div className="space-y-0.5 md:space-y-1">
                 <h1 className="text-xl md:text-3xl font-black tracking-tight text-slate-900 capitalize">{activeTab} Management</h1>
                 <p className="text-sm md:text-base text-slate-500">Manage your platform's {activeTab}.</p>
