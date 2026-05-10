@@ -13,7 +13,7 @@ export const Dashboard = () => {
   if (!user) return <Navigate to="/" />;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col md:flex-row gap-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-12 flex flex-col md:flex-row gap-8">
       <aside className="w-full md:w-64 space-y-6">
         <div className="flex items-center gap-4 p-6 mb-4 bg-slate-900 rounded-3xl shadow-xl border border-slate-800 text-white">
           <img src={userData?.photoURL || ''} alt="" className="w-14 h-14 rounded-full border-2 border-indigo-500" />
