@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { auth } from '../../lib/firebase';
 import { signOut } from 'firebase/auth';
@@ -7,9 +7,14 @@ import { signOut } from 'firebase/auth';
 export const Navbar = () => {
   const { user, userData } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  // Force white navbar on admin and dashboard pages
+  const isSpecialPage = location.pathname.startsWith('/admin') || location.pathname.startsWith('/dashboard');
+  const shouldShowScrolled = scrolled || isSpecialPage;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,18 +39,18 @@ export const Navbar = () => {
   return (
     <>
       <nav className={`z-50 transition-all duration-300 ${
-        scrolled 
+        shouldShowScrolled 
           ? 'fixed top-4 left-4 right-4 max-w-7xl mx-auto bg-white/95 backdrop-blur-md shadow-[0_10px_40px_rgb(0,0,0,0.15)] rounded-2xl border border-slate-100 py-3 px-4 sm:px-6 lg:px-8'
           : 'absolute top-0 w-full pt-6 px-4 sm:px-6 lg:px-8'
       }`}>
-        <div className={`mx-auto flex items-center justify-between ${scrolled ? 'w-full' : 'max-w-7xl'}`}>
+        <div className={`mx-auto flex items-center justify-between ${shouldShowScrolled ? 'w-full' : 'max-w-7xl'}`}>
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 font-bold text-2xl tracking-tight z-50 shrink-0">
             <div className="w-8 h-8 rounded-full bg-orange-400 flex items-center justify-center">
               <span className="text-[#001f3f] text-xs font-black tracking-tighter">Q</span>
             </div>
-            <span className={`uppercase tracking-widest text-lg transition-colors ${scrolled ? 'text-slate-900' : 'text-white'}`}>QALAM THIRASH</span>
+            <span className={`uppercase tracking-widest text-lg transition-colors ${shouldShowScrolled ? 'text-slate-900' : 'text-white'}`}>QALAM THIRASH</span>
           </Link>
 
           {/* Desktop Center Nav */}
@@ -55,12 +60,12 @@ export const Navbar = () => {
                 key={i}
                 href={link.path}
                 className={`font-bold transition-colors flex items-center gap-1.5 text-[15px] ${
-                  scrolled ? 'text-slate-600 hover:text-orange-500' : 'text-white/90 hover:text-orange-400'
+                  shouldShowScrolled ? 'text-slate-600 hover:text-orange-500' : 'text-white/90 hover:text-orange-400'
                 }`}
               >
                 {link.name}
                 {link.hasDropdown && (
-                  <svg className={`w-4 h-4 ${scrolled ? 'text-slate-400' : 'text-white/70'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-4 h-4 ${shouldShowScrolled ? 'text-slate-400' : 'text-white/70'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
                 )}
@@ -88,7 +93,7 @@ export const Navbar = () => {
                 <Link
                   to="/dashboard"
                   className={`px-4 py-2 rounded-full border text-sm font-bold transition-colors ${
-                    scrolled 
+                    shouldShowScrolled 
                       ? 'border-slate-200 text-slate-700 hover:bg-slate-50' 
                       : 'border-white/20 text-white hover:bg-white/10'
                   }`}
@@ -166,7 +171,7 @@ export const Navbar = () => {
                 <button
                   onClick={handleLogin}
                   className={`px-4 py-2 font-bold text-[14px] transition-colors ${
-                    scrolled ? 'text-slate-700 hover:text-orange-500' : 'text-white hover:text-orange-400'
+                    shouldShowScrolled ? 'text-slate-700 hover:text-orange-500' : 'text-white hover:text-orange-400'
                   }`}
                 >
                   Log in
@@ -182,7 +187,7 @@ export const Navbar = () => {
 
             {/* Hamburger (mobile only) */}
             <button
-              className={`lg:hidden p-2 ${scrolled ? 'text-slate-800' : 'text-white'}`}
+              className={`lg:hidden p-2 ${shouldShowScrolled ? 'text-slate-800' : 'text-white'}`}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

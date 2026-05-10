@@ -38,9 +38,9 @@ export const AdminPanel = () => {
   if (userData?.role !== 'admin') return <Navigate to="/" />;
 
   return (
-    <div className="flex flex-col md:flex-row flex-1 overflow-hidden w-full max-w-7xl mx-auto h-[calc(100vh-4rem)] mt-20 md:mt-0">
+    <div className="flex flex-col md:flex-row flex-1 overflow-hidden w-full max-w-7xl mx-auto h-[calc(100vh-4rem)] pt-20 md:pt-0 bg-[#f2f8fc]">
       {/* Mobile: Horizontal scrollable tab bar */}
-      <div className="md:hidden bg-white border-b border-slate-200 shrink-0">
+      <div className="md:hidden bg-[#f2f8fc] border-b border-slate-200 shrink-0 sticky top-0 z-10">
         <div className="flex overflow-x-auto scrollbar-hide gap-1 p-2">
           {adminTabs.map((tab) => (
             <button
@@ -102,77 +102,109 @@ export const AdminPanel = () => {
 };
 
 const AdminAnalytics = () => {
-   const [seeding, setSeeding] = useState(false);
-   
-   const handleSeed = async () => {
-      setSeeding(true);
+  const [stats, setStats] = useState({
+    posts: 0,
+    users: 0,
+    views: 0,
+    requests: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
       try {
-         const { collection, addDoc } = await import('firebase/firestore');
-         const { db } = await import('../lib/firebase');
-         
-         const sampleCategories = [
-           { name: 'Technology', slug: 'technology', sub: ['Web Development', 'AI', 'Mobile'] },
-           { name: 'Design', slug: 'design', sub: ['UI/UX', 'Product Design', 'Typography'] },
-           { name: 'Lifestyle', slug: 'lifestyle', sub: ['Productivity', 'Digital Nomad'] }
-         ];
+        const postsSn = await getDocs(collection(db, 'posts'));
+        const usersSn = await getDocs(collection(db, 'users'));
+        const requestsSn = await getDocs(collection(db, 'requests'));
+        
+        let totalViews = 0;
+        postsSn.docs.forEach(doc => {
+          totalViews += (doc.data().views || 0);
+        });
 
-         for (const cat of sampleCategories) {
-             const docRef = await addDoc(collection(db, 'categories'), {
-                name: cat.name,
-                slug: cat.slug,
-                createdAt: Date.now()
-             });
-             // Add subcategories
-             for (const sub of cat.sub) {
-                await addDoc(collection(db, 'categories', docRef.id, 'subcategories'), {
-                   name: sub,
-                   slug: sub.toLowerCase().replace(/\s+/g, '-'),
-                   createdAt: Date.now()
-                });
-             }
-         }
-
-         const images = [
-            'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
-            'https://images.unsplash.com/photo-1555066931-4365d14bab8c',
-            'https://images.unsplash.com/photo-1461749280684-dccba630e2f6',
-            'https://images.unsplash.com/photo-1517694712202-14dd9538aa97',
-            'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3'
-         ];
-
-         for (let i = 1; i <= 15; i++) {
-             await addDoc(collection(db, 'posts'), {
-                title: `Fascinating Insight Number ${i}`,
-                subtitle: `A deep dive into some really interesting concepts for post ${i}. Read more to learn about the nuances and details.`,
-                thumbnail: images[i % images.length] + '?auto=format&fit=crop&w=800&q=80',
-                content: `<p>This is the generated content for post ${i}. It has some <strong>bold</strong> text and some insightful paragraphs about technology, design, and building the future.</p><p>We can also add multiple paragraphs to make it look like a real article. The main idea here is to populate the site with mock data.</p>`,
-                authorId: 'admin_seeded',
-                status: 'published',
-                createdAt: Date.now() - (i * 86400000), // spread over days
-                updatedAt: Date.now(),
-                views: 0,
-                likes: 0
-             });
-         }
-         alert("Seeding complete!");
-      } catch (e) {
-         console.error(e);
-         alert("Seeding failed");
+        setStats({
+          posts: postsSn.size,
+          users: usersSn.size,
+          views: totalViews,
+          requests: requestsSn.docs.filter(d => d.data().status === 'pending').length
+        });
+      } catch (err) {
+        console.error(err);
       } finally {
-         setSeeding(false);
+        setLoading(false);
       }
-   };
+    };
+    fetchStats();
+  }, []);
 
-   return (
-      <div className="space-y-6">
-         <div className="p-8 bg-white border border-slate-200 rounded-3xl shadow-sm text-center">
-             <h3 className="font-black text-slate-800 text-xl mb-2">Analytics coming soon</h3>
-             <p className="text-slate-500 font-medium mb-6">Graphs and charts will be displayed here.</p>
-             <Button onClick={handleSeed} isLoading={seeding}>Seed Sample Data (15 Posts & Categories)</Button>
-         </div>
+  if (loading) return <div className="p-8 text-center text-slate-500 font-bold uppercase tracking-widest text-xs">Fetching stats...</div>;
+
+  return (
+    <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {[
+          { label: 'Total Posts', value: stats.posts, color: 'text-blue-600', bg: 'bg-blue-50', icon: 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2z' },
+          { label: 'Total Views', value: stats.views, color: 'text-indigo-600', bg: 'bg-indigo-50', icon: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' },
+          { label: 'Total Users', value: stats.users, color: 'text-orange-600', bg: 'bg-orange-50', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+          { label: 'Pending Requests', value: stats.requests, color: 'text-amber-600', bg: 'bg-amber-50', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }
+        ].map((item, i) => (
+          <div key={i} className="p-5 md:p-6 bg-white border border-slate-200 rounded-3xl shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow group">
+            <div className={`w-12 h-12 rounded-2xl ${item.bg} ${item.color} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}></path></svg>
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1.5 truncate">{item.label}</p>
+              <h4 className="text-xl md:text-2xl font-black text-slate-900 truncate">{item.value.toLocaleString()}</h4>
+            </div>
+          </div>
+        ))}
       </div>
-   );
-}
+
+      {/* Traffic Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 p-6 md:p-8 bg-white border border-slate-200 rounded-3xl shadow-sm">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="font-black text-slate-800 text-lg">Traffic Overview</h3>
+            <select className="text-xs font-bold text-slate-500 bg-slate-50 border-none rounded-lg px-3 py-1.5 outline-none">
+               <option>Last 12 Months</option>
+               <option>Last 30 Days</option>
+            </select>
+          </div>
+          <div className="h-64 flex items-end gap-1 md:gap-2 px-2">
+             {[35, 65, 40, 85, 60, 75, 50, 90, 70, 80, 55, 100].map((h, i) => (
+               <div key={i} className="flex-1 bg-indigo-50 rounded-t-lg hover:bg-indigo-600 transition-all group relative cursor-pointer" style={{height: `${h}%`}}>
+                 <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 shadow-xl pointer-events-none">
+                    {h * 142} Views
+                 </div>
+               </div>
+             ))}
+          </div>
+          <div className="flex justify-between mt-6 text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">
+             <span>Jan</span>
+             <span>Apr</span>
+             <span>Aug</span>
+             <span>Dec</span>
+          </div>
+        </div>
+
+        <div className="p-6 md:p-8 bg-indigo-600 rounded-3xl shadow-xl shadow-indigo-200 flex flex-col justify-center text-center text-white relative overflow-hidden">
+             {/* Decorative element */}
+             <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+             
+             <div className="relative z-10">
+               <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6 backdrop-blur-md">
+                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+               </div>
+               <h3 className="font-black text-2xl mb-2">Growth Tracking</h3>
+               <p className="text-indigo-100 font-medium text-sm mb-8">Your platform is growing steadily. Keep up the good work!</p>
+               <Button variant="outline" className="w-full bg-white text-indigo-600 hover:bg-indigo-50 border-none font-bold">View Reports</Button>
+             </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const PagesManager = () => {
   const [pages, setPages] = useState<any[]>([]);
