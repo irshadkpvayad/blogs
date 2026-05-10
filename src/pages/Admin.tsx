@@ -38,7 +38,7 @@ export const AdminPanel = () => {
   if (userData?.role !== 'admin') return <Navigate to="/" />;
 
   return (
-    <div className="flex flex-col md:flex-row flex-1 overflow-hidden w-full max-w-7xl mx-auto h-[calc(100vh-4rem)]">
+    <div className="flex flex-col md:flex-row flex-1 overflow-hidden w-full max-w-7xl mx-auto h-[calc(100vh-4rem)] mt-20 md:mt-0">
       {/* Mobile: Horizontal scrollable tab bar */}
       <div className="md:hidden bg-white border-b border-slate-200 shrink-0">
         <div className="flex overflow-x-auto scrollbar-hide gap-1 p-2">
@@ -364,17 +364,31 @@ const PagesManager = () => {
 const UsersManager = () => {
   const [users, setUsers] = useState<any[]>([]);
 
+  const fetchUsers = async () => {
+    try {
+      const sn = await getDocs(query(collection(db, 'users'), orderBy('joinedDate', 'desc')));
+      setUsers(sn.docs.map(d => ({id: d.id, ...d.data()})));
+    } catch (e) {
+       console.error(e);
+    }
+  };
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const sn = await getDocs(query(collection(db, 'users'), orderBy('joinedDate', 'desc')));
-        setUsers(sn.docs.map(d => ({id: d.id, ...d.data()})));
-      } catch (e) {
-         console.error(e);
-      }
-    };
     fetchUsers();
   }, []);
+
+  const toggleRole = async (userId: string, currentRole: string) => {
+    const newRole = currentRole === 'admin' ? 'user' : 'admin';
+    if (!confirm(`Switch this user to ${newRole.toUpperCase()}?`)) return;
+
+    try {
+      await updateDoc(doc(db, 'users', userId), { role: newRole });
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update role");
+    }
+  };
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -393,9 +407,17 @@ const UsersManager = () => {
             <div className="flex-1 min-w-0">
               <p className="font-bold text-slate-900 text-sm truncate">{u.name}</p>
               <p className="text-xs text-slate-500 truncate">{u.email}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-700'}`}>{u.role}</span>
-                <span className="text-[11px] text-slate-400">{new Date(u.joinedDate || 0).toLocaleDateString()}</span>
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-700'}`}>{u.role}</span>
+                  <span className="text-[11px] text-slate-400">{new Date(u.joinedDate || 0).toLocaleDateString()}</span>
+                </div>
+                <button 
+                  onClick={() => toggleRole(u.id, u.role)}
+                  className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 underline uppercase tracking-wider"
+                >
+                  Make {u.role === 'admin' ? 'User' : 'Admin'}
+                </button>
               </div>
             </div>
           </div>
@@ -412,6 +434,7 @@ const UsersManager = () => {
                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-widest leading-none">Email</th>
                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-widest leading-none">Role</th>
                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-widest leading-none">Joined</th>
+                     <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-widest leading-none text-right">Actions</th>
                   </tr>
                </thead>
                <tbody className="divide-y divide-slate-100">
@@ -430,6 +453,11 @@ const UsersManager = () => {
                            </span>
                         </td>
                         <td className="p-4 text-sm text-slate-500">{new Date(u.joinedDate || 0).toLocaleDateString()}</td>
+                        <td className="p-4 text-right">
+                           <Button size="sm" variant="outline" onClick={() => toggleRole(u.id, u.role)}>
+                              Make {u.role === 'admin' ? 'User' : 'Admin'}
+                           </Button>
+                        </td>
                      </tr>
                   ))}
                </tbody>
