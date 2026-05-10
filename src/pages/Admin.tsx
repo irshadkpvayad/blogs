@@ -6,6 +6,30 @@ import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Button } from '../components/ui/Button';
 import { RichEditor } from '../components/ui/RichEditor';
 
+const adminTabs = [
+  { id: 'dashboard', label: 'Dashboard', icon: (
+     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+  ) },
+  { id: 'posts', label: 'Posts', icon: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+  ) },
+  { id: 'requests', label: 'Requests', icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+  ) },
+  { id: 'categories', label: 'Categories', icon: (
+     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+  ) },
+  { id: 'subcategories', label: 'Sub', icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+  ) },
+  { id: 'users', label: 'Users', icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+  ) },
+  { id: 'pages', label: 'Pages', icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+  ) }
+];
+
 export const AdminPanel = () => {
   const { user, userData } = useAuthStore();
   const [activeTab, setActiveTab] = useState('posts');
@@ -14,34 +38,32 @@ export const AdminPanel = () => {
   if (userData?.role !== 'admin') return <Navigate to="/" />;
 
   return (
-    <div className="flex flex-1 overflow-hidden w-full max-w-7xl mx-auto h-[calc(100vh-4rem)]">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col p-4 shrink-0 overflow-y-auto">
+    <div className="flex flex-col md:flex-row flex-1 overflow-hidden w-full max-w-7xl mx-auto h-[calc(100vh-4rem)]">
+      {/* Mobile: Horizontal scrollable tab bar */}
+      <div className="md:hidden bg-white border-b border-slate-200 shrink-0">
+        <div className="flex overflow-x-auto scrollbar-hide gap-1 p-2">
+          {adminTabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors shrink-0 ${
+                activeTab === tab.id
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-500 hover:bg-slate-100'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop: Sidebar */}
+      <aside className="hidden md:flex w-64 bg-white border-r border-slate-200 flex-col p-4 shrink-0 overflow-y-auto">
         <div className="space-y-1 mb-8">
            <p className="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Management</p>
-          {[
-            { id: 'dashboard', label: 'Dashboard', icon: (
-               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-            ) },
-            { id: 'posts', label: 'Posts', icon: (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-            ) },
-            { id: 'requests', label: 'Requests', icon: (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            ) },
-            { id: 'categories', label: 'Categories', icon: (
-               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-            ) },
-            { id: 'subcategories', label: 'Subcategories', icon: (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
-            ) },
-            { id: 'users', label: 'Users', icon: (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-            ) },
-            { id: 'pages', label: 'Pages', icon: (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            ) }
-          ].map((tab) => (
+          {adminTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -52,18 +74,18 @@ export const AdminPanel = () => {
                }`}
             >
               {tab.icon}
-              {tab.label}
+              {tab.id === 'subcategories' ? 'Subcategories' : tab.label}
             </button>
           ))}
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col p-8 overflow-y-auto gap-8">
-        <header className="flex items-end justify-between">
-            <div className="space-y-1">
-                <h1 className="text-3xl font-black tracking-tight text-slate-900 capitalize">{activeTab} Management</h1>
-                <p className="text-slate-500">Manage your platform's {activeTab}.</p>
+      <main className="flex-1 flex flex-col p-4 md:p-8 overflow-y-auto gap-4 md:gap-8">
+        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+            <div className="space-y-0.5 md:space-y-1">
+                <h1 className="text-xl md:text-3xl font-black tracking-tight text-slate-900 capitalize">{activeTab} Management</h1>
+                <p className="text-sm md:text-base text-slate-500">Manage your platform's {activeTab}.</p>
             </div>
         </header>
         
@@ -238,7 +260,7 @@ const PagesManager = () => {
 
   if (isCreating || editingPage) {
     return (
-      <form onSubmit={handleCreate} className="space-y-6 max-w-4xl bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+      <form onSubmit={handleCreate} className="space-y-4 md:space-y-6 max-w-4xl bg-white p-4 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 shadow-sm">
         <div className="flex justify-between items-center pb-4 border-b border-slate-100">
           <h2 className="font-black text-slate-800 text-xl">{editingPage ? 'Edit Page' : 'New Page'}</h2>
           <Button type="button" variant="outline" size="sm" onClick={() => { setIsCreating(false); setEditingPage(null); }}>Cancel</Button>
@@ -281,15 +303,33 @@ const PagesManager = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex justify-between items-center">
-        <h2 className="font-black text-slate-800 text-xl">All Static Pages</h2>
+        <h2 className="font-black text-slate-800 text-lg md:text-xl">All Static Pages</h2>
         <Button onClick={() => {
            setTitle(''); setSlug(''); setContent(''); setIsCreating(true);
         }}>Create Page</Button>
       </div>
       
-      <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+      {/* Mobile: Card layout */}
+      <div className="md:hidden space-y-3">
+        {pages.length === 0 && (
+          <div className="p-8 text-center text-slate-500 font-medium bg-white border border-slate-200 rounded-2xl">No pages created yet.</div>
+        )}
+        {pages.map(p => (
+          <div key={p.id} className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
+            <p className="font-bold text-slate-900 mb-1">{p.title}</p>
+            <p className="text-sm text-indigo-600 font-medium mb-3">/p/{p.slug}</p>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => handleEdit(p)}>Edit</Button>
+              <button onClick={() => handleDelete(p.id)} className="text-slate-400 hover:text-rose-600 font-bold text-sm px-3 py-1 bg-slate-100 hover:bg-rose-50 rounded-lg transition-colors">Delete</button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: Table layout */}
+      <div className="hidden md:block bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
          <table className="w-full text-left">
             <thead className="bg-slate-50 border-b border-slate-100">
                <tr>
@@ -337,11 +377,33 @@ const UsersManager = () => {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="font-black text-slate-800 text-xl">All Users</h2>
+        <h2 className="font-black text-slate-800 text-lg md:text-xl">All Users</h2>
       </div>
-      <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+
+      {/* Mobile: Card layout */}
+      <div className="md:hidden space-y-3">
+        {users.length === 0 && <div className="p-8 text-center text-slate-500 font-medium bg-white border border-slate-200 rounded-2xl">No users found.</div>}
+        {users.map(u => (
+          <div key={u.id} className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-200 shrink-0">
+              {u.photoURL && <img src={u.photoURL} alt={u.name} className="w-full h-full object-cover" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-slate-900 text-sm truncate">{u.name}</p>
+              <p className="text-xs text-slate-500 truncate">{u.email}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-700'}`}>{u.role}</span>
+                <span className="text-[11px] text-slate-400">{new Date(u.joinedDate || 0).toLocaleDateString()}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: Table layout */}
+      <div className="hidden md:block bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
          <div className="overflow-x-auto">
             <table className="w-full text-left">
                <thead className="bg-slate-50 border-b border-slate-100">
@@ -473,7 +535,7 @@ const CategoriesManager = () => {
 
   if (isCreating) {
     return (
-       <form onSubmit={handleCreate} className="max-w-xl p-8 bg-white border border-slate-200 rounded-3xl shadow-sm space-y-6">
+       <form onSubmit={handleCreate} className="max-w-xl p-4 md:p-8 bg-white border border-slate-200 rounded-2xl md:rounded-3xl shadow-sm space-y-4 md:space-y-6">
           <div className="flex justify-between items-center pb-4 border-b border-slate-100">
              <h3 className="font-black text-slate-900 text-lg">New Category</h3>
              <Button type="button" variant="outline" size="sm" onClick={() => setIsCreating(false)}>Cancel</Button>
@@ -488,22 +550,22 @@ const CategoriesManager = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
        <div className="flex justify-between items-center">
-          <h2 className="font-black text-slate-800 text-xl">All Categories</h2>
+          <h2 className="font-black text-slate-800 text-lg md:text-xl">All Categories</h2>
           <Button onClick={() => setIsCreating(true)}>Add Category</Button>
        </div>
        {categories.length === 0 ? (
           <div className="p-10 text-center text-slate-500 font-medium bg-white border border-slate-200 rounded-3xl shadow-sm">No categories found.</div>
        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
              {categories.map(c => (
-                <div key={c.id} className="p-6 bg-white border border-slate-200 rounded-3xl shadow-sm group">
+                <div key={c.id} className="p-4 md:p-6 bg-white border border-slate-200 rounded-2xl md:rounded-3xl shadow-sm group">
                    <div className="flex justify-between items-start mb-4">
                       <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-black text-xl border border-indigo-100">
                           {c.name.charAt(0)}
                       </div>
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity">
                          <button onClick={() => setActiveCategoryId(activeCategoryId === c.id ? null : c.id)} className="text-slate-400 hover:text-indigo-600 p-2 font-medium text-xs">Add Sub</button>
                          <button onClick={() => handleDelete(c.id)} className="text-slate-400 hover:text-rose-600 p-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -614,9 +676,9 @@ const SubcategoriesManager = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 md:space-y-8">
        {/* Create Form */}
-       <form onSubmit={handleCreate} className="max-w-xl p-8 bg-white border border-slate-200 rounded-3xl shadow-sm space-y-6">
+       <form onSubmit={handleCreate} className="max-w-xl p-4 md:p-8 bg-white border border-slate-200 rounded-2xl md:rounded-3xl shadow-sm space-y-4 md:space-y-6">
           <div className="flex justify-between items-center pb-4 border-b border-slate-100">
              <h3 className="font-black text-slate-900 text-lg">New Subcategory</h3>
           </div>
@@ -643,14 +705,14 @@ const SubcategoriesManager = () => {
        </form>
 
        {/* List */}
-       <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden p-6 max-w-3xl">
+       <div className="bg-white border border-slate-200 rounded-2xl md:rounded-3xl shadow-sm overflow-hidden p-4 md:p-6 max-w-3xl">
           <h3 className="font-black text-slate-800 text-lg mb-4">All Subcategories</h3>
           {subcategories.length === 0 ? (
              <div className="text-slate-500 text-center py-6">No subcategories found.</div>
           ) : (
              <div className="divide-y divide-slate-100">
                 {subcategories.map(sub => (
-                   <div key={sub.id} className="py-4 flex justify-between items-center group">
+                   <div key={sub.id} className="py-3 md:py-4 flex justify-between items-center gap-3">
                       <div>
                          <p className="font-bold text-slate-900">{sub.name}</p>
                          <p className="text-xs text-slate-500">Under <span className="font-bold text-slate-700">{sub.catName}</span> • /{sub.slug}</p>
@@ -727,7 +789,7 @@ const RequestsManager = () => {
       {requests.map(r => {
         const reqUser = usersMap[r.userId];
         return (
-          <div key={r.id} className="p-4 bg-white border border-slate-200 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-shadow">
+          <div key={r.id} className="p-3 md:p-4 bg-white border border-slate-200 rounded-2xl md:rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4 hover:shadow-md transition-shadow">
             <div className="flex gap-3">
                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden">
                    {reqUser?.photoURL ? (
@@ -950,9 +1012,9 @@ const PostsManager = () => {
 
   if (isCreating || editingPost) {
     return (
-      <form onSubmit={handleCreate} className="space-y-6 max-w-4xl bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+      <form onSubmit={handleCreate} className="space-y-4 md:space-y-6 max-w-4xl bg-white p-4 md:p-8 rounded-2xl md:rounded-3xl border border-slate-200 shadow-sm">
         <div className="flex justify-between items-center pb-4 border-b border-slate-100">
-          <h2 className="font-black text-slate-800 text-xl">{editingPost ? 'Edit Post' : 'New Post'}</h2>
+          <h2 className="font-black text-slate-800 text-lg md:text-xl">{editingPost ? 'Edit Post' : 'New Post'}</h2>
           <Button type="button" variant="outline" size="sm" onClick={() => { setIsCreating(false); setEditingPost(null); }}>Cancel</Button>
         </div>
         <input 
@@ -960,7 +1022,7 @@ const PostsManager = () => {
           placeholder="Post Title" 
           value={title} 
           onChange={e=>setTitle(e.target.value)}
-          className="w-full text-4xl font-black bg-transparent border-0 border-b border-slate-200 focus:ring-0 focus:border-indigo-500 px-0 py-4 outline-none transition-colors"
+          className="w-full text-2xl md:text-4xl font-black bg-transparent border-0 border-b border-slate-200 focus:ring-0 focus:border-indigo-500 px-0 py-3 md:py-4 outline-none transition-colors"
         />
         <input 
           type="text" 
@@ -1019,19 +1081,19 @@ const PostsManager = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex justify-between items-center">
-        <h2 className="font-black text-slate-800 text-xl">All Posts</h2>
+        <h2 className="font-black text-slate-800 text-lg md:text-xl">All Posts</h2>
         <Button onClick={() => {
            setTitle(''); setSubtitle(''); setContent(''); setIsCreating(true);
         }}>Write Post</Button>
       </div>
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         {posts.map(p => (
-          <div key={p.id} className="p-4 bg-white rounded-3xl shadow-sm border border-slate-200 flex justify-between items-center group transition-colors hover:border-indigo-200">
-            <div>
-              <p className="font-bold text-slate-900">{p.title}</p>
-              <div className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+          <div key={p.id} className="p-3 md:p-4 bg-white rounded-2xl md:rounded-3xl shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 group transition-colors hover:border-indigo-200">
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-slate-900 text-sm md:text-base truncate">{p.title}</p>
+              <div className="text-xs text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
                  <span>{new Date(p.createdAt || 0).toLocaleString()}</span>
                  <span>•</span>
                  <span className="flex items-center gap-1 font-bold text-indigo-600">
@@ -1040,7 +1102,7 @@ const PostsManager = () => {
                  </span>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                <div className="flex gap-2">
                  <button onClick={() => handleEdit(p)} className="text-slate-500 hover:text-indigo-600 font-bold text-sm px-2 py-1 bg-slate-100 hover:bg-indigo-50 rounded-lg transition-colors">Edit</button>
                  <button onClick={() => handleDelete(p.id)} className="text-slate-500 hover:text-rose-600 font-bold text-sm px-2 py-1 bg-slate-100 hover:bg-rose-50 rounded-lg transition-colors">Delete</button>

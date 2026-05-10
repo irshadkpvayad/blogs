@@ -24,4 +24,12 @@ body {
   .tag-blue {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#e0f2fe] text-[#0ea5e9] uppercase tracking-wider;
   }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
