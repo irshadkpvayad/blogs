@@ -31,7 +31,11 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    // Serve static assets — index:false prevents express.static from sending its own 404
+    // so the catch-all below always runs for SPA routes
+    app.use(express.static(distPath, { index: false }));
+    // SPA catch-all: serves index.html for every non-API route so React Router
+    // handles routing on hard refresh (e.g. /dashboard, /post/123)
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
