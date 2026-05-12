@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { api } from '../lib/api';
 import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useAuthStore } from '../store/useAuthStore';
@@ -45,16 +44,11 @@ export const Home = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const q = query(collection(db, 'posts'), where('status', '==', 'published'), limit(21));
-        const snapshot = await getDocs(q);
-        const fetched = snapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0));
+        const fetched = await api.get('/api/posts?status=published&limit=21');
+        setPosts(fetched && fetched.length >= 2 ? fetched : MOCK_POSTS);
 
-        setPosts(fetched.length >= 2 ? fetched : MOCK_POSTS);
-
-        const catSn = await getDocs(query(collection(db, 'categories'), limit(4)));
-        setCategories(catSn.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        // API for categories not yet created, we'll mock it for now since we just need the structure
+        setCategories([]);
       } catch (err: any) {
         console.error('Fetch error:', err?.message || err);
         setPosts(MOCK_POSTS);

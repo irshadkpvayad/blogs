@@ -84,7 +84,7 @@ export const Navbar = () => {
             {user ? (
               <div className="relative">
                 <button onClick={() => setProfileMenuOpen(!profileMenuOpen)} className="flex items-center gap-2 focus:outline-none">
-                  <img src={userData?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`} className="w-10 h-10 rounded-full object-cover border border-slate-200 hover:border-slate-400 transition-colors" alt="Profile" />
+                  <img src={user.photoURL || userData?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`} className="w-10 h-10 rounded-full object-cover border border-slate-200 hover:border-slate-400 transition-colors" alt="Profile" />
                 </button>
 
                 {profileMenuOpen && (
@@ -92,7 +92,7 @@ export const Navbar = () => {
                     <div className="fixed inset-0 z-40" onClick={() => setProfileMenuOpen(false)} />
                     <div className="absolute right-0 top-12 z-50 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
                       <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-slate-50">
-                        <img src={userData?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`} className="w-11 h-11 rounded-full border border-slate-200 object-cover shrink-0" alt="Profile" />
+                        <img src={user.photoURL || userData?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`} className="w-11 h-11 rounded-full border border-slate-200 object-cover shrink-0" alt="Profile" />
                         <div className="overflow-hidden">
                           <p className="font-bold text-slate-900 text-sm truncate">{userData?.name || 'User'}</p>
                           <p className="text-xs text-slate-500 truncate">{userData?.email}</p>

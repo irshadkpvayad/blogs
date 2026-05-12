@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { api } from '../lib/api';
+import { handleFirestoreError, OperationType } from '../lib/firebase';
 
 interface AuthState {
   user: User | null;
@@ -20,10 +20,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   setLoading: (loading) => set({ isLoading: loading }),
   fetchUserData: async (uid: string) => {
     try {
-      const docRef = doc(db, 'users', uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        set({ userData: docSnap.data() });
+      const data = await api.get(`/api/users/${uid}`);
+      if (data && !data.error) {
+        set({ userData: data });
       } else {
         set({ userData: null });
       }
