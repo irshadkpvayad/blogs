@@ -6,9 +6,9 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth, db, handleFirestoreError, OperationType } from './lib/firebase';
+import { auth, handleFirestoreError, OperationType } from './lib/firebase';
 import { useAuthStore } from './store/useAuthStore';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { api } from './lib/api';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { Home } from './pages/Home';
@@ -37,28 +37,7 @@ export default function App() {
       setUser(user);
       if (user) {
         try {
-          const userRef = doc(db, 'users', user.uid);
-          const userDoc = await getDoc(userRef);
-          if (!userDoc.exists()) {
-            // Create new user profile
-            const role = user.email === 'geektyle8@gmail.com' ? 'admin' : 'user';
-            
-            await setDoc(userRef, {
-              uid: user.uid,
-              name: user.displayName || 'Anonymous',
-              email: user.email,
-              photoURL: user.photoURL || '',
-              bio: '',
-              joinedDate: Date.now(),
-              role: role,
-              totalPosts: 0,
-              totalComments: 0,
-              rating: 0,
-              followersCount: 0,
-              followingCount: 0,
-              emailVerified: user.emailVerified
-            });
-          }
+          await api.post('/api/users', {});
           await fetchUserData(user.uid);
         } catch (err) {
           handleFirestoreError(err, OperationType.GET, `users/${user.uid}`);
