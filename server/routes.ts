@@ -52,7 +52,13 @@ router.post('/users', verifyToken, async (req: AuthRequest, res) => {
       await userRef.set(newUserData);
       return res.json(newUserData);
     }
-    res.json(userDoc.data());
+
+    // Update photoURL on every login to keep it in sync with Google account
+    if (user.picture) {
+      await userRef.update({ photoURL: user.picture });
+    }
+
+    res.json({ ...userDoc.data(), ...(user.picture ? { photoURL: user.picture } : {}) });
   } catch (error) {
     res.status(500).json({ error: 'Failed to sync user' });
   }

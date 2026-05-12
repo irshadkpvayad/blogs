@@ -58,7 +58,6 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<AuthPage />} />
-            <Route path="/search" element={<Search />} />
             <Route path="/post/:id" element={<PostView />} />
             <Route path="/p/:slug" element={<DynamicPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
