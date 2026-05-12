@@ -4,9 +4,9 @@
  */
 
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth, handleFirestoreError, OperationType } from './lib/firebase';
+import { auth } from './lib/firebase';
 import { useAuthStore } from './store/useAuthStore';
 import { api } from './lib/api';
 import { Navbar } from './components/layout/Navbar';
@@ -37,10 +37,18 @@ export default function App() {
       setUser(user);
       if (user) {
         try {
-          await api.post('/api/users', {});
+          // POST /api/users creates or updates the user and returns full user data
+          // (including photoURL synced from Google). Seed the store immediately
+          // so role-dependent UI (e.g. Admin Panel button) appears without a second fetch.
+          const syncedUser = await api.post('/api/users', {});
+          if (syncedUser && !syncedUser.error) {
+            useAuthStore.setState({ userData: syncedUser });
+          }
+          // Also fetch to ensure we have the latest persisted data
           await fetchUserData(user.uid);
         } catch (err) {
-          handleFirestoreError(err, OperationType.GET, `users/${user.uid}`);
+          console.error('Auth sync error:', err);
+          // Don't throw — allow app to continue even if sync fails
         }
       }
       setLoading(false);
