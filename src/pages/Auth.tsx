@@ -63,7 +63,7 @@ export const AuthPage = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 relative min-h-[calc(100vh-5rem)] bg-[#f2f8fc]">
+    <div className="flex-1 flex flex-col items-center justify-center p-8 pt-24 relative min-h-[calc(100vh-5rem)] bg-[#f2f8fc]">
       
       <div className="w-full max-w-md bg-white p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.07)] border border-slate-100 text-center space-y-8 relative z-10">
         <div className="space-y-4">
